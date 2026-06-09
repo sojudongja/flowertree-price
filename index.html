@@ -70,7 +70,6 @@
     <script>
         let masterData = [];
 
-        // 1. 구글 서버 대신 현재 깃허브 저장소에 같이 올라올 data.json 파일 로드
         async function loadData() {
             const spinner = document.getElementById('loadingSpinner');
             const totalCountEl = document.getElementById('totalCount');
@@ -78,7 +77,6 @@
             
             spinner.classList.remove('hidden');
             try {
-                // 동적 캐시 무력화를 위해 타임스탬프 쿼리 적용
                 const response = await fetch('data.json?v=' + new Date().getTime());
                 if (!response.ok) throw new Error('Data load failed');
                 
@@ -102,7 +100,6 @@
             }
         }
 
-        // 2. 입력값 변경 시 0.01초 필터링 엔진 실행
         function performSearch(keyword) {
             const container = document.getElementById('resultsContainer');
             const matchCountEl = document.getElementById('matchCount');
@@ -120,7 +117,6 @@
 
             const cleanKeyword = keyword.toLowerCase().trim();
             
-            // 깃허브 가속 구조: 미리 가공된 소문자 인덱스(pumbunLow, prodNameLow)로 매칭 연산 가속화
             const filtered = masterData.filter(item => {
                 return (item.pumbunLow && item.pumbunLow.includes(cleanKeyword)) || 
                        (item.prodNameLow && item.prodNameLow.includes(cleanKeyword));
@@ -133,13 +129,11 @@
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">'${keyword}'에 매칭되는 상품이 없습니다.</h3>
-                        <p class="text-slate-400 text-sm mt-1">품번 대소문자나 오타를 확인해 보세요.</p>
                     </div>
                 `;
                 return;
             }
 
-            // 검색 카드 렌더링 파이프라인
             let htmlString = "";
             filtered.forEach(item => {
                 htmlString += `
@@ -188,45 +182,16 @@
                             </thead>
                             <tbody>
                                 <tr class="text-slate-700 font-medium hover:bg-slate-50/50 transition-all">
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.jasa}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.coupang}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.naver}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20">
-                                        <div class="font-extrabold text-emerald-700">${item.ohouse}</div>
-                                        <div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.gmarket}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.ssg}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.lotte}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.artbox}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 border-r border-slate-100">
-                                        <div class="font-bold text-slate-900">${item.godpeople}</div>
-                                        <div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}%</div>
-                                    </td>
-                                    <td class="py-3 px-3 text-slate-500 font-normal leading-relaxed text-[11px]">
-                                        ${item.delivery}
-                                    </td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.jasa}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.coupang}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.naver}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20"><div class="font-extrabold text-emerald-700">${item.ohouse}</div><div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.gmarket}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.ssg}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.lotte}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.artbox}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.godpeople}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}%</div></td>
+                                    <td class="py-3 px-3 text-slate-500 font-normal leading-relaxed text-[11px]">${item.delivery}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -237,12 +202,10 @@
             container.innerHTML = htmlString;
         }
 
-        // 3. 이벤트 바인딩 및 초기화
         document.getElementById('searchInput').addEventListener('input', (e) => {
             performSearch(e.target.value);
         });
 
-        // 웹페이지 열리자마자 data.json 자동 로드 실행
         window.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
