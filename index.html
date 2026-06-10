@@ -60,7 +60,6 @@
       font-size: 13px;
     }
     
-    /* 📌 깃허브 전용 초경량 가속 테이블 레이아웃 */
     .table-wrapper {
       overflow-x: auto;
       max-height: 750px;
@@ -88,7 +87,6 @@
       z-index: 5;
     }
     
-    /* 최적화 구역별 고유 컬러 에센스 */
     .section-master { background-color: #edf7ed; color: #1e4620; font-weight: bold; }
     .section-jasa { background-color: #e3fafc; }
     .section-coupang { background-color: #fff4e6; }
@@ -107,7 +105,7 @@
     }
     .link-badge {
       display: inline-block;
-      background-color: #2e7d32;
+      background-color: #3b82f6;
       color: #fff;
       padding: 5px 10px;
       text-decoration: none;
@@ -115,7 +113,7 @@
       font-weight: bold;
       font-size: 11px;
     }
-    .link-badge:hover { background-color: #1b5e20; }
+    .link-badge:hover { background-color: #2563eb; }
     .state-txt {
       display: inline-block;
       background: #eee;
@@ -124,7 +122,7 @@
       font-size: 11px;
     }
     .bold-price { font-weight: 700; color: #111; }
-    .empty-row { text-align: center; color: #999; padding: 5px; font-size: 14px; }
+    .empty-row { text-align: center; color: #999; padding: 40px; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -184,12 +182,11 @@
 <script>
   let localDataset = [];
 
-  // 깃허브 배포 즉시 data.json 호출
   async function startupApplication() {
     try {
       const res = await fetch('data.json?t=' + new Date().getTime());
       if (!res.ok) throw new Error('Data fetch failed');
-      localDataset = await res.json();
+      localDataset = await res.ok ? await res.json() : [];
       
       document.getElementById("statusReport").textContent = "🟢 실시간 초고속 동기화 완료 (총 " + localDataset.length.toLocaleString() + "개 품목 맵핑됨)";
       document.getElementById("catalogBody").innerHTML = "<tr><td colspan='34' class='empty-row'>검색창에 품번이나 상품명을 입력해 주세요.</td></tr>";
@@ -199,7 +196,6 @@
     }
   }
 
-  // 실시간 0.01초 필터 서칭
   function filterStaticData() {
     var txt = document.getElementById("searchKeyword").value.trim().toLowerCase();
     var tbody = document.getElementById("catalogBody");
@@ -209,7 +205,7 @@
       return;
     }
     
-    // 🛠️ 완치 반영: 하이픈 뒤 상세옵션(-1, -2) 유연 부분일치 필터 서칭
+    // 🛠️ 옵션코드 분리 완치: 하이픈 옵션(-1, -2)을 끝까지 추적 매칭
     const matched = localDataset.filter(item => {
       var kPumbun = item.pumbunLow ? item.pumbunLow : "";
       var kName = item.prodNameLow ? item.prodNameLow : "";
@@ -225,7 +221,6 @@
     for(var i=0; i<matched.length; i++) {
       var row = matched[i];
       
-      // 🛠️ 완치 반영: P열 실제 링크 가로채기 복구 검증 마감
       var urlTag = "-";
       if(row.link && row.link !== "#" && row.link.trim() !== "") {
         urlTag = "<a href='" + row.link.trim() + "' target='_blank' class='link-badge'>🔗 이동</a>";
@@ -234,31 +229,31 @@
       var imgTag = row.img ? "<img src='" + row.img + "' class='prod-thumb' onerror='this.style.display=\"none\";'>" : "<span style='color:#bbb;'>No Img</span>";
       
       resHtml += "<tr>" +
-        "<td class='section-master'>" + row.pumbun + "</td>" +
+        "<td class='section-master'><b>" + row.pumbun + "</b></td>" +
         "<td>" + urlTag + "</td>" +
         "<td>" + row.regSheet + "</td>" +
         "<td>" + row.rowNo + "</td>" +
         "<td>" + imgTag + "</td>" +
-        "<td style='text-align:left; font-weight:500;'>" + row.prodName + "</td>" +
+        "<td style='text-align:left; font-weight:500;'><b>" + row.prodName + "</b></td>" +
         "<td>" + (row.color || "-") + "</td>" +
         "<td><code>" + (row.importantCode || "-") + "</code></td>" +
         "<td><span class='state-txt'>" + row.status + "</span></td>" +
         "<td>" + row.subPumbun + "</td>" +
         "<td class='bold-price' style='color:#c92a2a;'>" + row.jungSan + "</td>" +
-        "<td class='rate-col'>" + row.jungSanRate + "</td>" +
+        "<td>" + row.jungSanRate + "</td>" +
         "<td>" + row.wonGa + "</td>" +
         "<td>" + row.delivery + "</td>" +
         
-        "<td class='bold-price'>" + row.jasa + "</td><td class='rate-col'>" + row.jasaRate + "</td>" +
-        "<td class='bold-price'>" + row.coupang + "</td><td class='rate-col'>" + row.coupangRate + "</td>" +
-        "<td class='bold-price'>" + row.naver + "</td><td class='rate-col'>" + row.naverRate + "</td>" +
-        "<td class='bold-price'>" + row.ohouse + "</td><td class='rate-col'>" + row.ohouseRate + "</td>" +
+        "<td class='bold-price'>" + row.jasa + "</td><td>" + row.jasaRate + "</td>" +
+        "<td class='bold-price'>" + row.coupang + "</td><td>" + row.coupangRate + "</td>" +
+        "<td class='bold-price'>" + row.naver + "</td><td>" + row.naverRate + "</td>" +
+        "<td class='bold-price'>" + row.ohouse + "</td><td>" + row.ohouseRate + "</td>" +
         
-        "<td class='bold-price'>" + row.gmarket + "</td><td class='rate-col'>" + row.gmarketRate + "</td>" +
-        "<td class='bold-price'>" + row.ssg + "</td><td class='rate-col'>" + row.ssgRate + "</td>" +
-        "<td class='bold-price'>" + row.lotte + "</td><td class='rate-col'>" + r.lotteRate + "</td>" +
-        "<td class='bold-price'>" + row.artbox + "</td><td class='rate-col'>" + row.artboxRate + "</td>" +
-        "<td class='bold-price'>" + row.godpeople + "</td><td class='rate-col'>" + row.godpeopleRate + "</td>" +
+        "<td class='bold-price'>" + row.gmarket + "</td><td>" + row.gmarketRate + "</td>" +
+        "<td class='bold-price'>" + row.ssg + "</td><td>" + row.ssgRate + "</td>" +
+        "<td class='bold-price'>" + row.lotte + "</td><td>" + row.lotteRate + "</td>" +
+        "<td class='bold-price'>" + row.artbox + "</td><td>" + row.artboxRate + "</td>" +
+        "<td class='bold-price'>" + row.godpeople + "</td><td>" + row.godpeopleRate + "</td>" +
       "</tr>";
     }
     tbody.innerHTML = resHtml;
