@@ -177,7 +177,7 @@
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> 바로가기
                        </a>`
                     : "";
-                const titleLink = `<span class="font-mono text-sm text-slate-500 flex-shrink-0">${mainCode}</span>
+                const titleLink = `<span class="font-mono text-sm font-bold text-slate-900 flex-shrink-0">${mainCode}</span>
                                    <span class="text-slate-300 flex-shrink-0">|</span>
                                    <span class="font-bold text-slate-900">${rep.prodName}</span>
                                    ${linkBtn}`;
@@ -190,7 +190,22 @@
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.color || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap">${v.sabangCode || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${v.status.includes('판매중') ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${v.status}</span>
+                                ${(v.status || '-').split(',').map(s => {
+                                    const t = s.trim();
+                                    if (!t || t === '-') return '';
+                                    let cls = '';
+                                    if (t.startsWith('-')) cls = 'background:#f1f5f9; color:#94a3b8;';
+                                    else if (t.includes('신규')) cls = 'background:#ede9fe; color:#5b21b6;';
+                                    else if (t.includes('리뉴얼')) cls = 'background:#bfdbfe; color:#1d4ed8;';
+                                    else if (t.includes('판매중')) cls = 'background:#dbeafe; color:#1e40af;';
+                                    else if (t.includes('3차')) cls = 'background:#fecaca; color:#991b1b;';
+                                    else if (t.includes('2차')) cls = 'background:#fed7aa; color:#9a3412;';
+                                    else if (t.includes('1차')) cls = 'background:#fef9c3; color:#854d0e;';
+                                    else if (t.includes('판매중지')) cls = 'background:#fee2e2; color:#b91c1c;';
+                                    else if (t.includes('단종')) cls = 'background:#e2e8f0; color:#475569;';
+                                    else cls = 'background:#f1f5f9; color:#94a3b8;';
+                                    return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
+                                }).join('')}
                             </td>
                             <td class="py-2 px-3 border-r border-slate-100 font-bold text-emerald-700 bg-emerald-50/30 whitespace-nowrap">${v.jasa}<div class="text-[10px] text-emerald-500 font-normal">${v.jasaRate}</div></td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.coupang}<div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
@@ -235,8 +250,8 @@
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
                                     <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상품코드</th>
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상태</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷 품번코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">판매상태</th>
                                     <th class="ch-th" style="background:rgba(236,253,245,0.3); color:#065f46;">자사몰</th>
                                     <th class="ch-th">쿠팡</th>
                                     <th class="ch-th">네이버</th>
