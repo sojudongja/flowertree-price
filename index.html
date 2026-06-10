@@ -11,6 +11,9 @@
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .variant-row:hover { background-color: #f0fdf4; }
+        .variant-row:nth-child(even) { background-color: #f8fafc; }
+        .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -27,12 +30,11 @@
                         <p class="text-xs text-slate-500 mt-0.5">깃허브 독립 서버 구동형 (실시간 초고속 검색 모드)</p>
                     </div>
                 </div>
-                
                 <div class="relative flex-1 max-w-xl md:ml-auto">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </div>
-                    <input type="text" id="searchInput" 
+                    <input type="text" id="searchInput"
                            class="block w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
                            placeholder="품번, 상품명, 사방넷 품번으로 검색 (예: ABSG16001, 진달래, TMJ9K)" autofocus>
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -47,7 +49,7 @@
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>개</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건</span>
             </div>
             <div class="flex items-center gap-2 text-xs">
                 <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500 border border-slate-200">
@@ -58,9 +60,7 @@
 
         <div id="resultsContainer" class="grid grid-cols-1 gap-6">
             <div id="statusMessage" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                <div class="text-slate-300 text-6xl mb-4">
-                    <i class="fa-solid fa-folder-open"></i>
-                </div>
+                <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-folder-open"></i></div>
                 <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중입니다...</h3>
                 <p class="text-slate-400 text-sm mt-1">잠시만 기다려 주세요.</p>
             </div>
@@ -75,18 +75,18 @@
             const totalCountEl = document.getElementById('totalCount');
             const statusMessage = document.getElementById('statusMessage');
             const connectionStatus = document.getElementById('connectionStatus');
-            
+
             spinner.classList.remove('hidden');
             try {
                 const response = await fetch('data.json?v=' + new Date().getTime());
                 if (!response.ok) throw new Error('Data load failed');
-                
+
                 masterData = await response.json();
                 totalCountEl.textContent = masterData.length.toLocaleString();
 
                 connectionStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>정상 연결됨`;
                 connectionStatus.className = "inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-100";
-                
+
                 statusMessage.innerHTML = `
                     <div class="text-emerald-500 text-6xl mb-4"><i class="fa-solid fa-circle-check"></i></div>
                     <h3 class="text-lg font-medium text-slate-900">데이터 로드 완료 (${masterData.length.toLocaleString()}개)</h3>
@@ -107,10 +107,28 @@
             }
         }
 
+        // 메인코드 추출: ABSG16001-1 → ABSG16001
+        function getMainCode(pumbun) {
+            return pumbun.replace(/-\d+$/, '');
+        }
+
+        // 검색 필터 후 메인코드 기준으로 그룹핑
+        function groupByMainCode(filtered) {
+            const groupMap = new Map();
+            filtered.forEach(item => {
+                const mainCode = getMainCode(item.pumbun);
+                if (!groupMap.has(mainCode)) {
+                    groupMap.set(mainCode, []);
+                }
+                groupMap.get(mainCode).push(item);
+            });
+            return groupMap;
+        }
+
         function performSearch(keyword) {
             const container = document.getElementById('resultsContainer');
             const matchCountEl = document.getElementById('matchCount');
-            
+
             if (!keyword || keyword.trim() === "") {
                 matchCountEl.textContent = "0";
                 container.innerHTML = `
@@ -123,16 +141,16 @@
                 return;
             }
 
-            // 띄어쓰기 무시 검색
             const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
-            
+
             const filtered = masterData.filter(item => {
-                var targetPumbun   = item.pumbunLow    ? String(item.pumbunLow).replace(/\s+/g, "")    : "";
-                var targetName     = item.prodNameLow  ? String(item.prodNameLow).replace(/\s+/g, "")  : "";
-                var targetSabang   = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
+                var targetPumbun  = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
+                var targetName    = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
+                var targetSabang  = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
                 return targetPumbun.includes(cleanKeyword) || targetName.includes(cleanKeyword) || targetSabang.includes(cleanKeyword);
             });
 
+            const grouped = groupByMainCode(filtered);
             matchCountEl.textContent = filtered.length.toLocaleString();
 
             if (filtered.length === 0) {
@@ -147,86 +165,96 @@
             }
 
             let htmlString = "";
-            filtered.forEach(item => {
-                var liveLinkTag;
-                if (item.link && item.link !== "#" && item.link.trim() !== "") {
-                    liveLinkTag = `
-                        <a href="${item.link.trim()}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
-                            [${item.pumbun}] ${item.prodName} <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400"></i>
-                        </a>
-                    `;
-                } else {
-                    liveLinkTag = `[${item.pumbun}] ${item.prodName}`;
-                }
 
-                var sabangBadge = item.sabangCode && item.sabangCode !== "-"
-                    ? `<span class="text-xs text-slate-400 font-mono">사방넷: ${item.sabangCode}</span>`
-                    : "";
+            grouped.forEach((variants, mainCode) => {
+                const rep = variants[0]; // 대표 상품 (첫 번째)
+                const linkHref = rep.link && rep.link !== "#" ? rep.link.trim() : null;
+                const titleLink = linkHref
+                    ? `<a href="${linkHref}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
+                            ${mainCode} — ${rep.prodName}
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400"></i>
+                       </a>`
+                    : `${mainCode} — ${rep.prodName}`;
+
+                // 옵션 행 테이블
+                let variantRows = "";
+                variants.forEach(v => {
+                    variantRows += `
+                        <tr class="variant-row text-xs">
+                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap">${v.pumbun}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.color || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap">${v.sabangCode || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${v.status.includes('판매중') ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${v.status}</span>
+                            </td>
+                            <td class="py-2 px-3 border-r border-slate-100 font-bold text-slate-900 bg-blue-50/40 whitespace-nowrap">${v.jasa}<div class="text-[10px] text-slate-400 font-normal">${v.jasaRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.coupang}<div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.naver}<div class="text-[10px] text-slate-400">${v.naverRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 font-bold text-emerald-700 bg-emerald-50/30 whitespace-nowrap">${v.ohouse}<div class="text-[10px] text-emerald-500 font-normal">${v.ohouseRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.gmarket}<div class="text-[10px] text-slate-400">${v.gmarketRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.ssg}<div class="text-[10px] text-slate-400">${v.ssgRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.lotte}<div class="text-[10px] text-slate-400">${v.lotteRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.artbox}<div class="text-[10px] text-slate-400">${v.artboxRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.godpeople}<div class="text-[10px] text-slate-400">${v.godpeopleRate}</div></td>
+                            <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap">${v.delivery}</td>
+                        </tr>
+                    `;
+                });
 
                 htmlString += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
-                    <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/50">
-                        <div class="flex items-center gap-4">
-                            <img src="${item.img}" alt="상품이미지" onerror="this.src='https://placehold.co/80x80?text=No+Img'" class="w-16 h-16 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">${item.regSheet}</span>
-                                    <span class="text-xs text-slate-400 font-medium">${item.rowNo}번째 줄</span>
-                                    <span class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-700">${item.status}</span>
-                                </div>
-                                <h2 class="text-base font-bold text-slate-900 mt-1.5">
-                                    ${liveLinkTag}
-                                </h2>
-                                <p class="text-xs text-slate-500 mt-0.5">
-                                    색상: ${item.color || '-'} | 중요코드: ${item.importantCode || '-'}
-                                    ${sabangBadge ? ' | ' + item.sabangCode : ''}
-                                </p>
+                    <!-- 카드 헤더 -->
+                    <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
+                        <img src="${rep.img}" alt="상품이미지"
+                             onerror="this.src='https://placehold.co/64x64?text=No+Img'"
+                             class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">${rep.regSheet}</span>
+                                <span class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-600">중요코드: ${rep.importantCode || '-'}</span>
+                                <span class="text-xs text-slate-400">${variants.length}개 옵션</span>
                             </div>
+                            <h2 class="text-base font-bold text-slate-900">${titleLink}</h2>
                         </div>
-                        <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100 gap-2">
-                            <div class="text-xs text-slate-400">정산가 (원가)</div>
-                            <div class="text-right">
-                                <span class="text-lg font-extrabold text-slate-900">${item.jungSan}</span>
-                                <span class="text-xs text-slate-400 font-medium ml-1">(${item.wonGa})</span>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-xs text-slate-400 mb-0.5">정산가 (원가)</div>
+                            <div>
+                                <span class="text-lg font-extrabold text-slate-900">${rep.jungSan}</span>
+                                <span class="text-xs text-slate-400 ml-1">(${rep.wonGa})</span>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- 옵션 테이블 -->
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="w-full text-center text-xs whitespace-nowrap min-w-[900px]">
+                        <table class="w-full text-center whitespace-nowrap" style="min-width:1200px;">
                             <thead>
-                                <tr class="bg-slate-100/50 text-slate-500 font-medium border-b border-slate-200">
-                                    <th class="py-2.5 px-3 border-r border-slate-100">자사몰</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">쿠팡</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">네이버</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100 text-emerald-700 bg-emerald-50/50">오늘의집</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">지마켓</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">신세계</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">롯데홈</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">아트박스</th>
-                                    <th class="py-2.5 px-3 border-r border-slate-100">갓피플</th>
-                                    <th class="py-2.5 px-3">배송구분</th>
+                                <tr class="bg-slate-100/70 text-slate-500 text-[11px] font-medium border-b border-slate-200">
+                                    <th class="py-2 px-3 border-r border-slate-100 text-left">상품코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">색상</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">사방넷</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">상태</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 bg-blue-50/40">자사몰</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">쿠팡</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">네이버</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 bg-emerald-50/30 text-emerald-700">오늘의집</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">지마켓</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">신세계</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">롯데홈</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">아트박스</th>
+                                    <th class="py-2 px-3 border-r border-slate-100">갓피플</th>
+                                    <th class="py-2 px-3">배송구분</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="text-slate-700 font-medium hover:bg-slate-50/50 transition-all">
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.jasa}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.coupang}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.naver}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20"><div class="font-extrabold text-emerald-700">${item.ohouse}</div><div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.gmarket}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.ssg}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.lotte}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.artbox}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.godpeople}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}</div></td>
-                                    <td class="py-3 px-3 text-slate-500 font-normal leading-relaxed text-[11px]">${item.delivery}</td>
-                                </tr>
+                                ${variantRows}
                             </tbody>
                         </table>
                     </div>
                 </div>
                 `;
             });
+
             container.innerHTML = htmlString;
         }
 
