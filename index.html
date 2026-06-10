@@ -3,43 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌿 플라워트리 마스터 종합 가격 검색기 (깃허브 가속엔진)</title>
+  <title>🌿 플라워트리 마스터 종합 가격 검색기 (가속엔진 v10)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Noto Sans KR', sans-serif; padding: 15px; background-color: #f8fafc; color: #1e293b; margin: 0; }
-    .container { max-width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); }
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h1 { margin: 0; color: #1e4d2b; font-size: 24px; font-weight: 700; }
-    .header p { margin: 5px 0 0 0; font-size: 11px; color: #059669; font-weight: bold; }
-    .search-box { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
-    input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-    input:focus { border-color: #10b981; }
-    .loading { text-align: center; color: #059669; font-weight: bold; margin: 15px 0; }
+    :root {
+      --main-green: #2d5a27;
+      --bg-color: #f1f3f5;
+      --table-border: #dee2e6;
+      --th-bg: #f8f9fa;
+      --shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg-color); color: #343a40; margin: 0; padding: 20px; box-sizing: border-box; }
+    .container { max-width: 100%; background: white; padding: 30px; border-radius: 12px; box-shadow: var(--shadow); }
+    .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef; }
+    .header h1 { margin: 0; color: var(--main-green); font-size: 28px; font-weight: 700; }
+    .header p { margin: 8px 0 0 0; font-size: 14px; color: #6c757d; font-weight: 500; }
     
-    /* 📌 v9 오리지널 상단 스크롤 시 칼럼 고정(Sticky) 및 34개 칼럼 디자인 100% 원형 보존 */
-    .table-container { overflow-x: auto; max-height: 700px; border: 1px solid #cbd5e1; border-radius: 4px; position: relative; }
-    table { width: 100%; border-collapse: collapse; background: white; font-size: 11px; text-align: center; min-width: 2600px; }
+    .search-box { position: relative; max-width: 600px; margin: 0 auto 30px auto; }
+    input { width: 100%; padding: 15px 20px; border: 2px solid #ced4da; border-radius: 30px; font-size: 16px; outline: none; box-shadow: var(--shadow); transition: border-color 0.2s; }
+    input:focus { border-color: var(--main-green); }
+    .loading { text-align: center; color: var(--main-green); font-weight: bold; margin: 20px 0; display: block; font-size: 14px;}
     
-    thead th { position: sticky; top: 0; z-index: 10; padding: 8px 4px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155; }
-    thead tr:nth-child(2) th { top: 35px; } 
+    /* 📌 최신형 Sticky 테이블 디자인 및 34개 칼럼 규격 매핑 보존 */
+    .table-container { overflow-x: auto; max-height: 800px; border: 1px solid var(--table-border); border-radius: 8px; position: relative; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; font-size: 12px; text-align: center; min-width: 2700px; table-layout: fixed; }
     
-    .th-green { background-color: #c6e0b4 !important; }
-    .th-blue { background-color: #b4c6e7 !important; }
-    .th-yellow { background-color: #fff2cc !important; }
-    .th-pink { background-color: #f8cbad !important; }
-    .th-gray { background-color: #f2f2f2 !important; }
+    thead th { position: sticky; top: 0; z-index: 10; padding: 12px 6px; border: 1px solid var(--table-border); font-weight: 600; color: #212529; box-sizing: border-box; background-color: var(--th-bg)!important;}
+    thead tr:nth-child(2) th { top: 41px; } /* 두 번째 헤더 행 위치 정렬 */
     
-    td { padding: 6px 4px; border: 1px solid #e2e8f0; vertical-align: middle; }
-    tr:hover { background-color: #f8fafc; }
+    .th-green { background-color: #e6ffec !important; color: #099268 !important; }
+    .th-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; }
+    .th-yellow { background-color: #fff9db !important; color: #f08c00 !important; }
+    .th-pink { background-color: #fff0f6 !important; color: #d6336c !important; }
+    .th-gray { background-color: #f1f3f5 !important; color: #495057 !important; }
     
-    .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
-    .btn-link { background-color: #3b82f6; color: white; padding: 4px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block; }
-    .btn-link:hover { background-color: #2563eb; }
+    td { padding: 10px 6px; border: 1px solid var(--table-border); vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+    tr:hover { background-color: #f1f3f5; }
     
-    .status-badge { background-color: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid var(--table-border); display: block; margin: 0 auto; }
+    .btn-link { background-color: #339af0; color: white; padding: 6px 12px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 12px; display: inline-block; transition: background-color 0.2s;}
+    .btn-link:hover { background-color: #1c7ed6; }
     
-    .price-col { font-weight: bold; color: #0f172a; }
-    .rate-col { color: #64748b; font-size: 10px; }
-    .no-result { text-align: center; color: #94a3b8; padding: 40px; font-size: 14px; }
+    .status-badge { background-color: #adb5bd; color: white; padding: 3px 8px; border-radius: 20px; font-weight: 500; font-size: 11px;}
+    .price-col { font-weight: 700; color: #212529; font-size: 13px;}
+    .rate-col { color: #868e96; font-size: 11px; }
+    .no-result { text-align: center; color: #adb5bd; padding: 60px; font-size: 16px; font-weight: 500;}
   </style>
 </head>
 <body>
@@ -47,7 +55,7 @@
 <div class="container">
   <div class="header">
     <h1>🌿 플라워트리 마스터 종합 가격 검색기</h1>
-    <p>⚡ 깃허브 무한 가속 서칭 모드 (v9 디자인 양식 완벽 보존)</p>
+    <p>⚡ 깃허브 무한 가속 서칭 모드 (최신 UI 디자인 v10)</p>
   </div>
   
   <div class="search-box">
@@ -74,10 +82,10 @@
           <th class="th-pink" rowspan="2">정산<br>배율</th>
           <th class="th-pink" rowspan="2">원가</th>
           <th class="th-pink" rowspan="2">배송구분</th>
-          <th colspan="2" style="background-color:#d9e1f2;">자사몰</th>
-          <th colspan="2" style="background-color:#fce4d6;">쿠팡</th>
-          <th colspan="2" style="background-color:#e2efda;">스마트스토어</th>
-          <th colspan="2" style="background-color:#fff2cc;">오늘의집<br>CJ온스타일</th>
+          <th colspan="2" class="th-blue">자사몰</th>
+          <th colspan="2" class="th-pink">쿠팡</th>
+          <th colspan="2" class="th-green">스마트스토어</th>
+          <th colspan="2" class="th-yellow">오늘의집<br>CJ온스타일</th>
           <th colspan="2" class="th-gray">G마켓/옥션<br>11번가/롯데온</th>
           <th colspan="2" class="th-gray">신세계몰/텐바이텐<br>GS SHOP</th>
           <th colspan="2" class="th-gray">롯데홈쇼핑<br>홈&쇼핑</th>
@@ -85,9 +93,111 @@
           <th colspan="2" class="th-gray">갓피플몰</th>
         </tr>
         <tr>
-          <th style="background:#d9e1f2;">판매가</th><th style="background:#d9e1f2;">배율</th>
-          <th style="background:#fce4d6;">판매가</th><th style="background:#fce4d6;">배율</th>
-          <th style="background:#e2efda;">판매가</th><th style="background:#e2efda;">배율</th>
-          <th style="background:#fff2cc;">판매가</th><th style="background:#fff2cc;">배율</th>
+          <th class="th-blue">판매가</th><th class="th-blue">배율</th>
+          <th class="th-pink">판매가</th><th class="th-pink">배율</th>
+          <th class="th-green">판매가</th><th class="th-green">배율</th>
+          <th class="th-yellow">판매가</th><th class="th-yellow">배율</th>
           <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-          <th class="th-gray">판매가</th>
+          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
+          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
+          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
+          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody">
+        <tr>
+          <td colspan="34" class="no-result">데이터를 백그라운드에서 동기화하고 있습니다. 잠시만 기다려주세요...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let masterData = [];
+
+  // 페이지 로드 시 data.json 즉시 로드해서 메모리에 적재
+  async function initEngine() {
+    try {
+      const response = await fetch('data.json?v=' + new Date().getTime());
+      if (!response.ok) throw new Error('데이터 파싱 실패');
+      masterData = await response.json();
+      
+      document.getElementById("loading").textContent = "🟢 실시간 초고속 데이터 맵 동기화 성공 (총 " + masterData.length.toLocaleString() + "개 로드됨)";
+      document.getElementById("resultBody").innerHTML = "<tr><td colspan='34' class='no-result'>상단 검색창에 코드나 상품명을 타이핑하면 0.01초 만에 자동 검색됩니다.</td></tr>";
+    } catch (e) {
+      document.getElementById("loading").style.color = "#c92a2a";
+      document.getElementById("loading").textContent = "❌ data.json 데이터를 찾을 수 없습니다. 중계시트에서 즉시 동기화 버튼을 실행해 주세요.";
+    }
+  }
+
+  // 0.01초 초고속 필터링 검색 로직
+  function doStaticSearch() {
+    var query = document.getElementById("keyword").value.trim().toLowerCase();
+    var tbody = document.getElementById("resultBody");
+    
+    if(!query) {
+      tbody.innerHTML = "<tr><td colspan='34' class='no-result'>상단 검색창에 코드나 상품명을 타이핑하면 0.01초 만에 자동 검색됩니다.</td></tr>";
+      return;
+    }
+    
+    // 🛠️ 핵심 교정: -1, -2, -3 옵션 누락 방지 완전독립 필터링 구조
+    const filtered = masterData.filter(item => {
+      var pumbunTarget = item.pumbunLow ? item.pumbunLow : "";
+      var nameTarget = item.prodNameLow ? item.prodNameLow : "";
+      return pumbunTarget.includes(query) || nameTarget.includes(query);
+    });
+    
+    if (filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='34' class='no-result'>⚠️ 조회된 데이터가 없습니다. 품번이나 상품명을 확인해주세요.</td></tr>";
+      return;
+    }
+    
+    var html = "";
+    for (var i = 0; i < filtered.length; i++) {
+      var r = filtered[i];
+      
+      // 🛠️ 핵심 교정: P열 링크 매핑 구조 완전독립 바인딩
+      var linkTag = "-";
+      if (r.link && r.link !== "#" && r.link.trim() !== "") {
+        linkTag = "<a href='" + r.link.trim() + "' target='_blank' class='btn-link'>🔗 이동</a>";
+      }
+      
+      var imgTag = r.img ? "<img src='" + r.img + "' class='thumb-img' onerror='this.style.display=\"none\";'>" : "<span style='color:#adb5bd;'>No Img</span>";
+      
+      html += "<tr>" +
+                "<td><b>" + r.pumbun + "</b></td>" +
+                "<td>" + linkTag + "</td>" +
+                "<td>" + r.regSheet + "</td>" +
+                "<td>" + r.rowNo + "</td>" +
+                "<td>" + imgTag + "</td>" +
+                "<td style='text-align:left; padding-left:10px;'><b>" + r.prodName + "</b></td>" +
+                "<td>" + (r.color || "-") + "</td>" +
+                "<td><code>" + (r.importantCode || "-") + "</code></td>" +
+                "<td><span class='status-badge'>" + r.status + "</span></td>" +
+                "<td>" + r.subPumbun + "</td>" +
+                
+                "<td class='price-col' style='color:#c92a2a;'>" + r.jungSan + "</td>" +
+                "<td class='rate-col'>" + r.jungSanRate + "</td>" +
+                "<td>" + r.wonGa + "</td>" +
+                "<td>" + r.delivery + "</td>" +
+                
+                "<td class='price-col'>" + r.jasa + "</td><td class='rate-col'>" + r.jasaRate + "</td>" +
+                "<td class='price-col'>" + r.coupang + "</td><td class='rate-col'>" + r.coupangRate + "</td>" +
+                "<td class='price-col'>" + r.naver + "</td><td class='rate-col'>" + r.naverRate + "</td>" +
+                "<td class='price-col'>" + r.ohouse + "</td><td class='rate-col'>" + r.ohouseRate + "</td>" +
+                "<td class='price-col'>" + r.gmarket + "</td><td class='rate-col'>" + r.gmarketRate + "</td>" +
+                "<td class='price-col'>" + r.ssg + "</td><td class='rate-col'>" + r.ssgRate + "</td>" +
+                "<td class='price-col'>" + r.lotte + "</td><td class='rate-col'>" + r.lotteRate + "</td>" +
+                "<td class='price-col'>" + r.artbox + "</td><td class='rate-col'>" + r.artboxRate + "</td>" +
+                "<td class='price-col'>" + r.godpeople + "</td><td class='rate-col'>" + r.godpeopleRate + "</td>" +
+              "</tr>";
+    }
+    tbody.innerHTML = html;
+  }
+
+  window.addEventListener('DOMContentLoaded', initEngine);
+</script>
+
+</body>
+</html>
