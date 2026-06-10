@@ -14,6 +14,7 @@
         .variant-row:hover { background-color: #f0fdf4; }
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
+        .th-wrap { white-space: normal; line-height: 1.4; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -49,7 +50,7 @@
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건 (<strong id="groupCount" class="text-emerald-600 font-bold">0</strong>개 상품)</span>
             </div>
             <div class="flex items-center gap-2 text-xs">
                 <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500 border border-slate-200">
@@ -107,19 +108,15 @@
             }
         }
 
-        // 메인코드 추출: ABSG16001-1 → ABSG16001
         function getMainCode(pumbun) {
             return pumbun.replace(/-\d+$/, '');
         }
 
-        // 검색 필터 후 메인코드 기준으로 그룹핑
         function groupByMainCode(filtered) {
             const groupMap = new Map();
             filtered.forEach(item => {
                 const mainCode = getMainCode(item.pumbun);
-                if (!groupMap.has(mainCode)) {
-                    groupMap.set(mainCode, []);
-                }
+                if (!groupMap.has(mainCode)) groupMap.set(mainCode, []);
                 groupMap.get(mainCode).push(item);
             });
             return groupMap;
@@ -128,9 +125,11 @@
         function performSearch(keyword) {
             const container = document.getElementById('resultsContainer');
             const matchCountEl = document.getElementById('matchCount');
+            const groupCountEl = document.getElementById('groupCount');
 
             if (!keyword || keyword.trim() === "") {
                 matchCountEl.textContent = "0";
+                groupCountEl.textContent = "0";
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
@@ -152,6 +151,7 @@
 
             const grouped = groupByMainCode(filtered);
             matchCountEl.textContent = filtered.length.toLocaleString();
+            groupCountEl.textContent = grouped.size.toLocaleString();
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -167,7 +167,7 @@
             let htmlString = "";
 
             grouped.forEach((variants, mainCode) => {
-                const rep = variants[0]; // 대표 상품 (첫 번째)
+                const rep = variants[0];
                 const linkHref = rep.link && rep.link !== "#" ? rep.link.trim() : null;
                 const titleLink = linkHref
                     ? `<a href="${linkHref}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
@@ -176,7 +176,6 @@
                        </a>`
                     : `${mainCode} — ${rep.prodName}`;
 
-                // 옵션 행 테이블
                 let variantRows = "";
                 variants.forEach(v => {
                     variantRows += `
@@ -203,7 +202,6 @@
 
                 htmlString += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
-                    <!-- 카드 헤더 -->
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
                         <img src="${rep.img}" alt="상품이미지"
                              onerror="this.src='https://placehold.co/64x64?text=No+Img'"
@@ -225,25 +223,24 @@
                         </div>
                     </div>
 
-                    <!-- 옵션 테이블 -->
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="w-full text-center whitespace-nowrap" style="min-width:1200px;">
+                        <table class="w-full text-center" style="min-width:1100px;">
                             <thead>
                                 <tr class="bg-slate-100/70 text-slate-500 text-[11px] font-medium border-b border-slate-200">
-                                    <th class="py-2 px-3 border-r border-slate-100 text-left">상품코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">사방넷</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">상태</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 bg-emerald-50/30 text-emerald-700">자사몰</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">쿠팡</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">네이버</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">오늘의집</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">지마켓</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">신세계</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">롯데홈</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">아트박스</th>
-                                    <th class="py-2 px-3 border-r border-slate-100">갓피플</th>
-                                    <th class="py-2 px-3">배송구분</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap">상품코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">색상</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">사방넷</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">상태</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 bg-emerald-50/30 text-emerald-700 whitespace-nowrap">자사몰</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">쿠팡</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">네이버</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">오늘의집</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">G마켓/옥션<br>11번가/롯데온</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">GS SHOP<br>현대홈쇼핑<br>신세계</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">홈앤쇼핑<br>롯데홈쇼핑<br>CJ온스타일<br>갓피플몰</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">아트박스<br>핫트랙스<br>텐바이텐</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">카카오</th>
+                                    <th class="py-2 px-3 whitespace-nowrap">배송구분</th>
                                 </tr>
                             </thead>
                             <tbody>
