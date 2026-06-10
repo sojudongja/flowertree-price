@@ -15,6 +15,9 @@
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
         .th-wrap { white-space: normal; line-height: 1.4; }
+        .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; }
+        .ch-th .sub { display: block; font-size: 9px; color: #94a3b8; font-weight: 400; line-height: 1.4; }
+        .ch-th .main { display: block; font-size: 11px; font-weight: 600; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -180,7 +183,7 @@
                 variants.forEach(v => {
                     variantRows += `
                         <tr class="variant-row text-xs">
-                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap">${v.pumbun}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-center">${v.pumbun}</td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.color || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap">${v.sabangCode || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">
@@ -226,21 +229,21 @@
                     <div class="overflow-x-auto no-scrollbar">
                         <table class="w-full text-center" style="min-width:1100px;">
                             <thead>
-                                <tr class="bg-slate-100/70 text-slate-500 text-[11px] font-medium border-b border-slate-200">
-                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap">상품코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">사방넷</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">상태</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 bg-emerald-50/30 text-emerald-700 whitespace-nowrap">자사몰</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">쿠팡</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">네이버</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">오늘의집</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">지마켓 / 옥션<br>11번가 / 롯데온</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">신세계몰 / GS SHOP<br>현대홈쇼핑</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">롯데홈쇼핑 / 홈앤쇼핑<br>CJ온스타일 / 갓피플몰</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 th-wrap">아트박스<br>10X10 / 핫트랙스</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">카카오</th>
-                                    <th class="py-2 px-3 whitespace-nowrap">배송구분</th>
+                                <tr class="bg-slate-100/70 border-b border-slate-200">
+                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상품코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상태</th>
+                                    <th class="ch-th bg-emerald-50/30 text-emerald-700"><span class="main">자사몰</span></th>
+                                    <th class="ch-th"><span class="main">쿠팡</span></th>
+                                    <th class="ch-th"><span class="main">네이버</span></th>
+                                    <th class="ch-th"><span class="main">오늘의집</span></th>
+                                    <th class="ch-th"><span class="sub">지마켓 / 옥션</span><span class="sub">11번가 / 롯데온</span><span class="main">롯데온</span></th>
+                                    <th class="ch-th"><span class="sub">신세계몰 / GS SHOP</span><span class="main">현대홈쇼핑</span></th>
+                                    <th class="ch-th"><span class="sub">롯데홈쇼핑 / 홈앤쇼핑</span><span class="sub">CJ온스타일 / 갓피플몰</span><span class="main">갓피플몰</span></th>
+                                    <th class="ch-th"><span class="sub">10X10 / 핫트랙스</span><span class="main">아트박스</span></th>
+                                    <th class="ch-th"><span class="main">카카오</span></th>
+                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">배송구분</th>
                                 </tr>
                             </thead>
                             <tbody>
