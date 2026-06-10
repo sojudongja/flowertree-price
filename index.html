@@ -24,7 +24,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-slate-900 tracking-tight">🌿 플라워트리 마스터 가격 검색기</h1>
-                        <p class="text-xs text-slate-500 mt-0.5">깃허브 독립 서버 구동형 (실시간 0.01초 초고속 검색 모드)</p>
+                        <p class="text-xs text-slate-500 mt-0.5">깃허브 독립 서버 구동형 (실시간 초고속 검색 모드)</p>
                     </div>
                 </div>
                 
@@ -34,7 +34,7 @@
                     </div>
                     <input type="text" id="searchInput" 
                            class="block w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
-                           placeholder="품번 또는 상품명을 입력하세요... (예: 크리스마스트리, 21-A)" autofocus>
+                           placeholder="품번, 상품명, 사방넷 품번으로 검색 (예: ABSG16001, 진달래, TMJ9K)" autofocus>
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                         <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
                     </div>
@@ -50,8 +50,8 @@
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>개</span>
             </div>
             <div class="flex items-center gap-2 text-xs">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>정상 연결됨
+                <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                    <span class="h-1.5 w-1.5 rounded-full bg-slate-400 mr-1.5"></span>로딩 중
                 </span>
             </div>
         </div>
@@ -61,8 +61,8 @@
                 <div class="text-slate-300 text-6xl mb-4">
                     <i class="fa-solid fa-folder-open"></i>
                 </div>
-                <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중이거나 검색 대기 중입니다.</h3>
-                <p class="text-slate-400 text-sm mt-1">상단 검색창에 품번이나 상품명을 입력해 주세요.</p>
+                <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중입니다...</h3>
+                <p class="text-slate-400 text-sm mt-1">잠시만 기다려 주세요.</p>
             </div>
         </div>
     </main>
@@ -74,6 +74,7 @@
             const spinner = document.getElementById('loadingSpinner');
             const totalCountEl = document.getElementById('totalCount');
             const statusMessage = document.getElementById('statusMessage');
+            const connectionStatus = document.getElementById('connectionStatus');
             
             spinner.classList.remove('hidden');
             try {
@@ -82,21 +83,26 @@
                 
                 masterData = await response.json();
                 totalCountEl.textContent = masterData.length.toLocaleString();
+
+                connectionStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>정상 연결됨`;
+                connectionStatus.className = "inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-100";
                 
                 statusMessage.innerHTML = `
                     <div class="text-emerald-500 text-6xl mb-4"><i class="fa-solid fa-circle-check"></i></div>
-                    <h3 class="text-lg font-medium text-slate-900">실시간 데이터 로드 완료!</h3>
-                    <p class="text-slate-500 text-sm mt-1">검색어를 입력하시면 0.01초 만에 결과를 필터링합니다.</p>
+                    <h3 class="text-lg font-medium text-slate-900">데이터 로드 완료 (${masterData.length.toLocaleString()}개)</h3>
+                    <p class="text-slate-500 text-sm mt-1">품번, 상품명, 사방넷 품번으로 검색하세요.</p>
                 `;
             } catch (error) {
                 console.error(error);
+                connectionStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-rose-500 mr-1.5"></span>연결 실패`;
+                connectionStatus.className = "inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-rose-50 text-rose-700 border border-rose-100";
                 statusMessage.innerHTML = `
                     <div class="text-rose-500 text-6xl mb-4"><i class="fa-solid fa-circle-exclamation"></i></div>
                     <h3 class="text-lg font-medium text-slate-900">데이터를 찾을 수 없습니다.</h3>
                     <p class="text-rose-400 text-sm mt-1">구글 중계시트에서 [최신가격 즉시 동기화] 버튼을 한 번 실행해 주세요!</p>
                 `;
             } finally {
-                initInputListener(); // 🛠️ 고정 완치: 데이터 로드 직후 공백 무시 입력 장치 가동 지시 추가
+                initInputListener();
                 spinner.classList.add('hidden');
             }
         }
@@ -111,17 +117,20 @@
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">검색어를 입력해 주세요.</h3>
+                        <p class="text-slate-400 text-sm mt-1">품번, 상품명, 사방넷 품번 모두 검색 가능합니다.</p>
                     </div>
                 `;
                 return;
             }
 
+            // 띄어쓰기 무시 검색
             const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
             
             const filtered = masterData.filter(item => {
-                var targetKey = item.pumbunLow ? String(item.pumbunLow).replace(/\s+/g, "") : "";
-                var targetName = item.prodNameLow ? String(item.prodNameLow).replace(/\s+/g, "") : "";
-                return targetKey.includes(cleanKeyword) || targetName.includes(cleanKeyword);
+                var targetPumbun   = item.pumbunLow    ? String(item.pumbunLow).replace(/\s+/g, "")    : "";
+                var targetName     = item.prodNameLow  ? String(item.prodNameLow).replace(/\s+/g, "")  : "";
+                var targetSabang   = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
+                return targetPumbun.includes(cleanKeyword) || targetName.includes(cleanKeyword) || targetSabang.includes(cleanKeyword);
             });
 
             matchCountEl.textContent = filtered.length.toLocaleString();
@@ -131,6 +140,7 @@
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">'${keyword}'에 매칭되는 상품이 없습니다.</h3>
+                        <p class="text-slate-400 text-sm mt-1">품번, 상품명, 사방넷 품번을 확인해 주세요.</p>
                     </div>
                 `;
                 return;
@@ -138,7 +148,7 @@
 
             let htmlString = "";
             filtered.forEach(item => {
-                var liveLinkTag = "-";
+                var liveLinkTag;
                 if (item.link && item.link !== "#" && item.link.trim() !== "") {
                     liveLinkTag = `
                         <a href="${item.link.trim()}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
@@ -149,6 +159,10 @@
                     liveLinkTag = `[${item.pumbun}] ${item.prodName}`;
                 }
 
+                var sabangBadge = item.sabangCode && item.sabangCode !== "-"
+                    ? `<span class="text-xs text-slate-400 font-mono">사방넷: ${item.sabangCode}</span>`
+                    : "";
+
                 htmlString += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/50">
@@ -156,21 +170,24 @@
                             <img src="${item.img}" alt="상품이미지" onerror="this.src='https://placehold.co/80x80?text=No+Img'" class="w-16 h-16 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">${item.regSheet} 시트</span>
+                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">${item.regSheet}</span>
                                     <span class="text-xs text-slate-400 font-medium">${item.rowNo}번째 줄</span>
                                     <span class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-700">${item.status}</span>
                                 </div>
                                 <h2 class="text-base font-bold text-slate-900 mt-1.5">
                                     ${liveLinkTag}
                                 </h2>
-                                <p class="text-xs text-slate-500 mt-0.5">색상: ${item.color || '-'} | 중요코드: ${item.importantCode || '-'}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    색상: ${item.color || '-'} | 중요코드: ${item.importantCode || '-'}
+                                    ${sabangBadge ? ' | ' + item.sabangCode : ''}
+                                </p>
                             </div>
                         </div>
                         <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100 gap-2">
                             <div class="text-xs text-slate-400">정산가 (원가)</div>
                             <div class="text-right">
                                 <span class="text-lg font-extrabold text-slate-900">${item.jungSan}</span>
-                                <span class="text-xs text-slate-400 font-medium">(${item.wonGa})</span>
+                                <span class="text-xs text-slate-400 font-medium ml-1">(${item.wonGa})</span>
                             </div>
                         </div>
                     </div>
@@ -193,15 +210,15 @@
                             </thead>
                             <tbody>
                                 <tr class="text-slate-700 font-medium hover:bg-slate-50/50 transition-all">
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.jasa}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.coupang}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.naver}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20"><div class="font-extrabold text-emerald-700">${item.ohouse}</div><div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.gmarket}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.ssg}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.lotte}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.artbox}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}%</div></td>
-                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.godpeople}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.jasa}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.coupang}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.naver}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20"><div class="font-extrabold text-emerald-700">${item.ohouse}</div><div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.gmarket}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.ssg}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.lotte}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.artbox}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.godpeople}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}</div></td>
                                     <td class="py-3 px-3 text-slate-500 font-normal leading-relaxed text-[11px]">${item.delivery}</td>
                                 </tr>
                             </tbody>
