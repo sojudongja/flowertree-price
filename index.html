@@ -96,6 +96,7 @@
                     <p class="text-rose-400 text-sm mt-1">구글 중계시트에서 [최신가격 즉시 동기화] 버튼을 한 번 실행해 주세요!</p>
                 `;
             } finally {
+                initInputListener();
                 spinner.classList.add('hidden');
             }
         }
@@ -115,11 +116,14 @@
                 return;
             }
 
-            const cleanKeyword = keyword.toLowerCase().trim();
+            // 🛠️ 핵심 교정: 입력된 검색어의 모든 공백(스페이스바) 제거 처리
+            const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
             
             const filtered = masterData.filter(item => {
-                return (item.pumbunLow && item.pumbunLow.includes(cleanKeyword)) || 
-                       (item.prodNameLow && item.prodNameLow.includes(cleanKeyword));
+                // 데이터 내부의 품번과 상품명도 공백을 전부 제거하고 1:1 진공 압축 매칭 비교
+                var targetKey = item.pumbunLow ? String(item.pumbunLow).replace(/\s+/g, "") : "";
+                var targetName = item.prodNameLow ? String(item.prodNameLow).replace(/\s+/g, "") : "";
+                return targetKey.includes(cleanKeyword) || targetName.includes(cleanKeyword);
             });
 
             matchCountEl.textContent = filtered.length.toLocaleString();
@@ -136,6 +140,17 @@
 
             let htmlString = "";
             filtered.forEach(item => {
+                var liveLinkTag = "-";
+                if (item.link && item.link !== "#" && item.link.trim() !== "") {
+                    liveLinkTag = `
+                        <a href="${item.link.trim()}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
+                            [${item.pumbun}] ${item.prodName} <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400"></i>
+                        </a>
+                    `;
+                } else {
+                    liveLinkTag = `[${item.pumbun}] ${item.prodName}`;
+                }
+
                 htmlString += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/50">
@@ -148,9 +163,7 @@
                                     <span class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-700">${item.status}</span>
                                 </div>
                                 <h2 class="text-base font-bold text-slate-900 mt-1.5">
-                                    <a href="${item.link}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
-                                        [${item.pumbun}] ${item.prodName} <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400"></i>
-                                    </a>
+                                    ${liveLinkTag}
                                 </h2>
                                 <p class="text-xs text-slate-500 mt-0.5">색상: ${item.color || '-'} | 주요코드: ${item.importantCode || '-'}</p>
                             </div>
@@ -202,9 +215,14 @@
             container.innerHTML = htmlString;
         }
 
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            performSearch(e.target.value);
-        });
+        function initInputListener() {
+            const inputEl = document.getElementById('searchInput');
+            if (inputEl) {
+                inputEl.addEventListener('input', (e) => {
+                    performSearch(e.target.value);
+                });
+            }
+        }
 
         window.addEventListener('DOMContentLoaded', loadData);
     </script>
