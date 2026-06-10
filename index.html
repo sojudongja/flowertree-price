@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>플라워트리 마스터 가격 검색기 (깃허브 가속엔진)</title>
+    <title>🌿 플라워트리 마스터 가격 검색기 (깃허브 가속엔진)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -42,8 +42,9 @@
                     <input type="text" id="searchInput"
                            class="block w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
                            placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (예: ABSG16001, 진달래, 105164)" autofocus>
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
                         <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
+                        <button onclick="doSearch()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-all">검색</button>
                     </div>
                 </div>
             </div>
@@ -278,11 +279,16 @@
             container.innerHTML = htmlString;
         }
 
+        function doSearch() {
+            const inputEl = document.getElementById('searchInput');
+            if (inputEl) performSearch(inputEl.value);
+        }
+
         function initInputListener() {
             const inputEl = document.getElementById('searchInput');
             if (inputEl) {
-                inputEl.addEventListener('input', (e) => {
-                    performSearch(e.target.value);
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') performSearch(e.target.value);
                 });
             }
         }
