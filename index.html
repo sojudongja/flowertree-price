@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌿 플라워트리 마스터 가격 검색기 (깃허브 가속엔진)</title>
+    <title>플라워트리 마스터 가격 검색기 (깃허브 가속엔진)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -117,6 +117,24 @@
             return pumbun.replace(/-\d+$/, '');
         }
 
+        function getStatusOrder(status) {
+            const s = (status || '').split(',')[0].trim();
+            if (s.startsWith('0 판매중') && !s.includes('리뉴얼')) return 0;
+            if (s.includes('리뉴얼')) return 1;
+            if (s.startsWith('9')) return 2;
+            if (s.includes('1차')) return 3;
+            if (s.includes('2차')) return 4;
+            if (s.includes('3차')) return 5;
+            if (s.startsWith('4')) return 6;
+            if (s.startsWith('5')) return 7;
+            return 8;
+        }
+
+        function getVariantNumber(pumbun) {
+            const match = pumbun.match(/-(\d+)$/);
+            return match ? parseInt(match[1]) : 0;
+        }
+
         function groupByMainCode(filtered) {
             const groupMap = new Map();
             filtered.forEach(item => {
@@ -124,7 +142,18 @@
                 if (!groupMap.has(mainCode)) groupMap.set(mainCode, []);
                 groupMap.get(mainCode).push(item);
             });
-            return groupMap;
+
+            // 옵션 행 정렬: 1순위 판매상태, 2순위 코드 번호
+            groupMap.forEach((variants, key) => {
+                variants.sort((a, b) => {
+                    const statusDiff = getStatusOrder(a.status) - getStatusOrder(b.status);
+                    if (statusDiff !== 0) return statusDiff;
+                    return getVariantNumber(a.pumbun) - getVariantNumber(b.pumbun);
+                });
+            });
+
+            // 카드 정렬: 메인코드 오름차순
+            return new Map([...groupMap.entries()].sort((a, b) => a[0].localeCompare(b[0])));
         }
 
         function performSearch(keyword) {
