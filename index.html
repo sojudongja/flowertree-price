@@ -1,187 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌿 플라워트리 마스터 종합 검색기 (깃허브 가속엔진)</title>
-  <style>
-    body { font-family: 'Noto Sans KR', sans-serif; padding: 15px; background-color: #f8fafc; color: #1e293b; margin: 0; }
-    .container { max-width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); }
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h1 { margin: 0; color: #1e4d2b; font-size: 24px; font-weight: 700; }
-    .header p { margin: 5px 0 0 0; font-size: 11px; color: #059669; font-weight: bold; }
-    .search-box { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
-    input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-    input:focus { border-color: #10b981; }
-    .loading { text-align: center; color: #059669; font-weight: bold; margin: 15px 0; }
-    
-    .table-container { overflow-x: auto; max-height: 700px; border: 1px solid #cbd5e1; border-radius: 4px; position: relative; }
-    table { width: 100%; border-collapse: collapse; background: white; font-size: 11px; text-align: center; min-width: 2600px; }
-    
-    thead th { position: sticky; top: 0; z-index: 10; padding: 8px 4px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155; }
-    thead tr:nth-child(2) th { top: 35px; } 
-    
-    .th-green { background-color: #c6e0b4 !important; }
-    .th-blue { background-color: #b4c6e7 !important; }
-    .th-yellow { background-color: #fff2cc !important; }
-    .th-pink { background-color: #f8cbad !important; }
-    .th-gray { background-color: #f2f2f2 !important; }
-    
-    td { padding: 6px 4px; border: 1px solid #e2e8f0; vertical-align: middle; }
-    tr:hover { background-color: #f8fafc; }
-    
-    .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
-    .btn-link { background-color: #3b82f6; color: white; padding: 4px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block; }
-    .btn-link:hover { background-color: #2563eb; }
-    
-    .status-badge { background-color: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-    
-    .price-col { font-weight: bold; color: #0f172a; }
-    .rate-col { color: #64748b; font-size: 10px; }
-    .no-result { text-align: center; color: #94a3b8; padding: 40px; font-size: 14px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 플라워트리 마스터 가격 검색기 (깃허브 가속엔진)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased">
 
-<div class="container">
-  <div class="header">
-    <h1>🌿 플라워트리 마스터 종합 가격 검색기</h1>
-    <p>⚡ 깃허브 무한 가속 서칭 모드 (입력 즉시 필터링)</p>
-  </div>
-  
-  <div class="search-box">
-    <input type="text" id="keyword" placeholder="개별상품코드 또는 메인 상품명을 입력하세요..." oninput="doStaticSearch()">
-  </div>
-  
-  <div id="loading" class="loading">🔄 0.01초 가속 카탈로그 엔진 구동 중...</div>
-  
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th class="th-green" rowspan="2">개별상품코드</th>
-          <th class="th-blue" rowspan="2">바로가기</th>
-          <th class="th-blue" rowspan="2">등록시트</th>
-          <th class="th-blue" rowspan="2">행번호</th>
-          <th class="th-yellow" rowspan="2">이미지</th>
-          <th class="th-yellow" rowspan="2">메인 상품명(기입)</th>
-          <th class="th-yellow" rowspan="2">색상(기입)</th>
-          <th class="th-yellow" rowspan="2">중요코드</th>
-          <th class="th-yellow" rowspan="2">판매상태</th>
-          <th class="th-yellow" rowspan="2">개별품번코드</th>
-          <th class="th-pink" rowspan="2">정산가<br>(배송비별도)</th>
-          <th class="th-pink" rowspan="2">정산<br>배율</th>
-          <th class="th-pink" rowspan="2">원가</th>
-          <th class="th-pink" rowspan="2">배송구분</th>
-          <th colspan="2" style="background-color:#d9e1f2;">자사몰</th>
-          <th colspan="2" style="background-color:#fce4d6;">쿠팡</th>
-          <th colspan="2" style="background-color:#e2efda;">스마트스토어</th>
-          <th colspan="2" style="background-color:#fff2cc;">오늘의집<br>CJ온스타일</th>
-          <th colspan="2" class="th-gray">G마켓/옥션<br>11번가/롯데온</th>
-          <th colspan="2" class="th-gray">신세계몰/텐바이텐<br>GS SHOP</th>
-          <th colspan="2" class="th-gray">롯데홈쇼핑<br>홈&쇼핑</th>
-          <th colspan="2" class="th-gray">아트박스/핫트랙스<br>현대홈쇼핑</th>
-          <th colspan="2" class="th-gray">갓피플몰</th>
-        </tr>
-        <tr>
-          <th style="background:#d9e1f2;">판매가</th><th style="background:#d9e1f2;">배율</th>
-          <th style="background:#fce4d6;">판매가</th><th style="background:#fce4d6;">배율</th>
-          <th style="background:#e2efda;">판매가</th><th style="background:#e2efda;">배율</th>
-          <th style="background:#fff2cc;">판매가</th><th style="background:#fff2cc;">배율</th>
-          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-          <th class="th-gray">판매가</th><th class="th-gray">배율</th>
-        </tr>
-      </thead>
-      <tbody id="resultBody">
-        <tr>
-          <td colspan="34" class="no-result">데이터를 백그라운드에서 동기화하고 있습니다. 잠시만 기다려주세요...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<script>
-  let masterData = [];
-
-  // 페이지 열리자마자 구글 엔진이 업로드해 줄 data.json을 다이렉트로 메모리에 적재
-  async function initEngine() {
-    try {
-      const response = await fetch('data.json?v=' + new Date().getTime());
-      if (!response.ok) throw new Error('데이터 파싱 불가능');
-      masterData = await response.json();
-      
-      document.getElementById("loading").textContent = "🟢 실시간 초고속 데이터 맵 동기화 성공 (총 " + masterData.length.toLocaleString() + "개 로드됨)";
-      document.getElementById("resultBody").innerHTML = "<tr><td colspan='34' class='no-result'>상단 검색창에 코드나 상품명을 타이핑하면 0.01초 만에 자동 검색됩니다.</td></tr>";
-    } catch (e) {
-      document.getElementById("loading").style.color = "#b91c1c";
-      document.getElementById("loading").textContent = "❌ data.json 데이터를 찾을 수 없습니다. 중계시트에서 즉시 동기화 버튼을 실행해 주세요.";
-    }
-  }
-
-  // 글자 입력 시 즉시 연산 필터링 (구글 서버 통신 없음 ➔ 딜레이 0초)
-  function doStaticSearch() {
-    var query = document.getElementById("keyword").value.trim().toLowerCase();
-    var tbody = document.getElementById("resultBody");
-    
-    if(!query) {
-      tbody.innerHTML = "<tr><td colspan='34' class='no-result'>상단 검색창에 코드나 상품명을 타이핑하면 0.01초 만에 자동 검색됩니다.</td></tr>";
-      return;
-    }
-    
-    // 초고속 로컬 필터 연산
-    const filtered = masterData.filter(item => {
-      return (item.pumbunLow && item.pumbunLow.includes(query)) || 
-             (item.prodNameLow && item.prodNameLow.includes(query));
-    });
-    
-    if (filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='34' class='no-result'>⚠️ 조회된 데이터가 없습니다. 품번이나 상품명을 확인해주세요.</td></tr>";
-      return;
-    }
-    
-    var html = "";
-    for (var i = 0; i < filtered.length; i++) {
-      var r = filtered[i];
-      var linkTag = (r.link && r.link !== "#") ? "<a href='" + r.link + "' target='_blank' class='btn-link'>🔗 이동</a>" : "<span style='color:#cbd5e1;'>-</span>";
-      var imgTag = r.img ? "<img src='" + r.img + "' class='thumb-img' onerror='this.style.display=\"none\";'>" : "<span style='color:#cbd5e1;'>No Img</span>";
-      
-      html += "<tr>" +
-                "<td><b>" + r.pumbun + "</b></td>" +
-                "<td>" + linkTag + "</td>" +
-                "<td>" + r.regSheet + "</td>" +
-                "<td>" + r.rowNo + "</td>" +
-                "<td>" + imgTag + "</td>" +
-                "<td style='text-align:left; padding-left:6px;'><b>" + r.prodName + "</b></td>" +
-                "<td>" + r.color + "</td>" +
-                "<td><code>" + r.importantCode + "</code></td>" +
-                "<td><span class='status-badge'>" + r.status + "</span></td>" +
-                "<td>" + r.subPumbun + "</td>" +
+    <header class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 text-white p-2.5 rounded-xl shadow-md shadow-emerald-100">
+                        <i class="fa-solid fa-leaf text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">🌿 플라워트리 마스터 가격 검색기</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">깃허브 독립 서버 구동형 (실시간 0.01초 초고속 검색 모드)</p>
+                    </div>
+                </div>
                 
-                "<td class='price-col' style='color:#b91c1c;'>" + r.jungSan + "</td>" +
-                "<td class='rate-col'>" + r.jungSanRate + "</td>" +
-                "<td>" + r.wonGa + "</td>" +
-                "<td>" + r.delivery + "</td>" +
+                <div class="relative flex-1 max-w-xl md:ml-auto">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="searchInput" 
+                           class="block w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
+                           placeholder="품번 또는 상품명을 입력하세요... (예: 크리스마스트리, 21-A)" autofocus>
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>개</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>정상 연결됨
+                </span>
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="grid grid-cols-1 gap-6">
+            <div id="statusMessage" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-slate-300 text-6xl mb-4">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중이거나 검색 대기 중입니다.</h3>
+                <p class="text-slate-400 text-sm mt-1">상단 검색창에 품번이나 상품명을 입력해 주세요.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let masterData = [];
+
+        async function loadData() {
+            const spinner = document.getElementById('loadingSpinner');
+            const totalCountEl = document.getElementById('totalCount');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            spinner.classList.remove('hidden');
+            try {
+                const response = await fetch('data.json?v=' + new Date().getTime());
+                if (!response.ok) throw new Error('Data load failed');
                 
-                "<td class='price-col'>" + r.jasa + "</td><td class='rate-col'>" + r.jasaRate + "</td>" +
-                "<td class='price-col'>" + r.coupang + "</td><td class='rate-col'>" + r.coupangRate + "</td>" +
-                "<td class='price-col'>" + r.naver + "</td><td class='rate-col'>" + r.naverRate + "</td>" +
-                "<td class='price-col'>" + r.ohouse + "</td><td class='rate-col'>" + r.ohouseRate + "</td>" +
-                "<td class='price-col'>" + r.gmarket + "</td><td class='rate-col'>" + r.gmarketRate + "</td>" +
-                "<td class='price-col'>" + r.ssg + "</td><td class='rate-col'>" + r.ssgRate + "</td>" +
-                "<td class='price-col'>" + r.lotte + "</td><td class='rate-col'>" + r.lotteRate + "</td>" +
-                "<td class='price-col'>" + r.artbox + "</td><td class='rate-col'>" + r.artboxRate + "</td>" +
-                "<td class='price-col'>" + r.godpeople + "</td><td class='rate-col'>" + r.godpeopleRate + "</td>" +
-              "</tr>";
-    }
-    tbody.innerHTML = html;
-  }
+                masterData = await response.json();
+                totalCountEl.textContent = masterData.length.toLocaleString();
+                
+                statusMessage.innerHTML = `
+                    <div class="text-emerald-500 text-6xl mb-4"><i class="fa-solid fa-circle-check"></i></div>
+                    <h3 class="text-lg font-medium text-slate-900">실시간 데이터 로드 완료!</h3>
+                    <p class="text-slate-500 text-sm mt-1">검색어를 입력하시면 0.01초 만에 결과를 필터링합니다.</p>
+                `;
+            } catch (error) {
+                console.error(error);
+                statusMessage.innerHTML = `
+                    <div class="text-rose-500 text-6xl mb-4"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <h3 class="text-lg font-medium text-slate-900">데이터를 찾을 수 없습니다.</h3>
+                    <p class="text-rose-400 text-sm mt-1">구글 중계시트에서 [최신가격 즉시 동기화] 버튼을 한 번 실행해 주세요!</p>
+                `;
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
 
-  window.addEventListener('DOMContentLoaded', initEngine);
-</script>
+        function performSearch(keyword) {
+            const container = document.getElementById('resultsContainer');
+            const matchCountEl = document.getElementById('matchCount');
+            
+            if (!keyword || keyword.trim() === "") {
+                matchCountEl.textContent = "0";
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
+                        <h3 class="text-lg font-medium text-slate-900">검색어를 입력해 주세요.</h3>
+                    </div>
+                `;
+                return;
+            }
 
+            const cleanKeyword = keyword.toLowerCase().trim();
+            
+            const filtered = masterData.filter(item => {
+                return (item.pumbunLow && item.pumbunLow.includes(cleanKeyword)) || 
+                       (item.prodNameLow && item.prodNameLow.includes(cleanKeyword));
+            });
+
+            matchCountEl.textContent = filtered.length.toLocaleString();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                        <h3 class="text-lg font-medium text-slate-900">'${keyword}'에 매칭되는 상품이 없습니다.</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            let htmlString = "";
+            filtered.forEach(item => {
+                htmlString += `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
+                    <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/50">
+                        <div class="flex items-center gap-4">
+                            <img src="${item.img}" alt="상품이미지" onerror="this.src='https://placehold.co/80x80?text=No+Img'" class="w-16 h-16 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">${item.regSheet} 시트</span>
+                                    <span class="text-xs text-slate-400 font-medium">${item.rowNo}번째 줄</span>
+                                    <span class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-700">${item.status}</span>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 mt-1.5">
+                                    <a href="${item.link}" target="_blank" class="hover:text-emerald-600 hover:underline inline-flex items-center gap-1.5">
+                                        [${item.pumbun}] ${item.prodName} <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400"></i>
+                                    </a>
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-0.5">색상: ${item.color || '-'} | 주요코드: ${item.importantCode || '-'}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100 gap-2">
+                            <div class="text-xs text-slate-400">정산가 (원가)</div>
+                            <div class="text-right">
+                                <span class="text-lg font-extrabold text-slate-900">${item.jungSan}</span>
+                                <span class="text-xs text-slate-400 font-medium">(${item.wonGa})</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto no-scrollbar">
+                        <table class="w-full text-center text-xs whitespace-nowrap min-w-[900px]">
+                            <thead>
+                                <tr class="bg-slate-100/50 text-slate-500 font-medium border-b border-slate-200">
+                                    <th class="py-2.5 px-3 border-r border-slate-100">자사몰</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">쿠팡</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">네이버</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100 text-emerald-700 bg-emerald-50/50">오늘의집</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">지마켓</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">신세계</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">롯데홈</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">아트박스</th>
+                                    <th class="py-2.5 px-3 border-r border-slate-100">갓피플</th>
+                                    <th class="py-2.5 px-3">배송구분</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-slate-700 font-medium hover:bg-slate-50/50 transition-all">
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.jasa}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.jasaRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.coupang}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.coupangRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.naver}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.naverRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100 text-emerald-900 bg-emerald-50/20"><div class="font-extrabold text-emerald-700">${item.ohouse}</div><div class="text-[10px] text-emerald-500 mt-0.5 font-semibold">${item.ohouseRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.gmarket}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.gmarketRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.ssg}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.ssgRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.lotte}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.lotteRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.artbox}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.artboxRate}%</div></td>
+                                    <td class="py-3 px-3 border-r border-slate-100"><div>${item.godpeople}</div><div class="text-[10px] text-slate-400 mt-0.5">${item.godpeopleRate}%</div></td>
+                                    <td class="py-3 px-3 text-slate-500 font-normal leading-relaxed text-[11px]">${item.delivery}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = htmlString;
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            performSearch(e.target.value);
+        });
+
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
 </body>
 </html>
