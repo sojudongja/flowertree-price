@@ -96,7 +96,7 @@
                     <p class="text-rose-400 text-sm mt-1">구글 중계시트에서 [최신가격 즉시 동기화] 버튼을 한 번 실행해 주세요!</p>
                 `;
             } finally {
-                initInputListener();
+                initInputListener(); // 🛠️ 고정 완치: 데이터 로드 직후 공백 무시 입력 장치 가동 지시 추가
                 spinner.classList.add('hidden');
             }
         }
@@ -116,11 +116,9 @@
                 return;
             }
 
-            // 🛠️ 핵심 교정: 입력된 검색어의 모든 공백(스페이스바) 제거 처리
             const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
             
             const filtered = masterData.filter(item => {
-                // 데이터 내부의 품번과 상품명도 공백을 전부 제거하고 1:1 진공 압축 매칭 비교
                 var targetKey = item.pumbunLow ? String(item.pumbunLow).replace(/\s+/g, "") : "";
                 var targetName = item.prodNameLow ? String(item.prodNameLow).replace(/\s+/g, "") : "";
                 return targetKey.includes(cleanKeyword) || targetName.includes(cleanKeyword);
@@ -165,7 +163,7 @@
                                 <h2 class="text-base font-bold text-slate-900 mt-1.5">
                                     ${liveLinkTag}
                                 </h2>
-                                <p class="text-xs text-slate-500 mt-0.5">색상: ${item.color || '-'} | 주요코드: ${item.importantCode || '-'}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">색상: ${item.color || '-'} | 중요코드: ${item.importantCode || '-'}</p>
                             </div>
                         </div>
                         <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100 gap-2">
