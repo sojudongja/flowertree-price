@@ -16,7 +16,9 @@
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
         .th-wrap { white-space: normal; line-height: 1.4; }
-        .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; }
+        .col-highlight { background-color: #ede9fe !important; color: #5b21b6 !important; }
+        .col-highlight * { color: #5b21b6 !important; }
+        .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
         .ch-th .sub { display: block; font-size: 9px; color: #94a3b8; font-weight: 400; line-height: 1.4; }
         .ch-th .main { display: block; font-size: 11px; font-weight: 600; }
     </style>
@@ -284,15 +286,15 @@
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷 품번코드</th>
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">판매상태</th>
-                                    <th class="ch-th" style="background:rgba(236,253,245,0.3); color:#065f46;">자사몰</th>
-                                    <th class="ch-th">쿠팡</th>
-                                    <th class="ch-th">네이버</th>
-                                    <th class="ch-th">오늘의집</th>
-                                    <th class="ch-th">지마켓<br>옥션<br>11번가<br>롯데온</th>
-                                    <th class="ch-th">신세계몰<br>GS SHOP<br>현대홈쇼핑</th>
-                                    <th class="ch-th">CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑</th>
-                                    <th class="ch-th">핫트랙스<br>텐바이텐<br>아트박스</th>
-                                    <th class="ch-th">카카오</th>
+                                    <th class="ch-th" data-col="4" onclick="toggleCol(4)" style="background:rgba(236,253,245,0.3); color:#065f46;">자사몰</th>
+                                    <th class="ch-th" data-col="5" onclick="toggleCol(5)">쿠팡</th>
+                                    <th class="ch-th" data-col="6" onclick="toggleCol(6)">네이버</th>
+                                    <th class="ch-th" data-col="7" onclick="toggleCol(7)">오늘의집</th>
+                                    <th class="ch-th" data-col="8" onclick="toggleCol(8)">지마켓<br>옥션<br>11번가<br>롯데온</th>
+                                    <th class="ch-th" data-col="9" onclick="toggleCol(9)">신세계몰<br>GS SHOP<br>현대홈쇼핑</th>
+                                    <th class="ch-th" data-col="10" onclick="toggleCol(10)">CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑</th>
+                                    <th class="ch-th" data-col="11" onclick="toggleCol(11)">핫트랙스<br>텐바이텐<br>아트박스</th>
+                                    <th class="ch-th" data-col="12" onclick="toggleCol(12)">카카오</th>
                                     <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">배송구분</th>
                                 </tr>
                             </thead>
@@ -306,6 +308,36 @@
             });
 
             container.innerHTML = htmlString;
+            applyColHighlight();
+        }
+
+        const activeCols = new Set();
+
+        function toggleCol(colIndex) {
+            if (activeCols.has(colIndex)) {
+                activeCols.delete(colIndex);
+            } else {
+                activeCols.add(colIndex);
+            }
+            applyColHighlight();
+        }
+
+        function applyColHighlight() {
+            // 모든 테이블의 해당 컬럼 적용
+            document.querySelectorAll('table').forEach(table => {
+                table.querySelectorAll('tr').forEach(row => {
+                    row.querySelectorAll('th[data-col], td').forEach((cell, idx) => {
+                        const colIdx = cell.dataset && cell.dataset.col
+                            ? parseInt(cell.dataset.col)
+                            : idx;
+                        if (activeCols.has(colIdx)) {
+                            cell.classList.add('col-highlight');
+                        } else {
+                            cell.classList.remove('col-highlight');
+                        }
+                    });
+                });
+            });
         }
 
         function doSearch() {
