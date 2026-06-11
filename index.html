@@ -20,6 +20,7 @@
         .variant-row:hover td:not(.col-hl-td) { background-color: #f0fdf4; }
 
         /* 채널 헤더 공통 */
+        .jasa-base { background: rgba(236,253,245,0.4); }
         .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
 
         /* 컬럼 하이라이트 - 홀수/짝수 구분 */
@@ -235,7 +236,7 @@
                                     return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
                                 }).join('')}
                             </td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap" style="background:rgba(236,253,245,0.4);">
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap jasa-base">
                                 <div class="font-bold text-emerald-700">${v.jasa}</div>
                                 <div class="text-[10px] text-emerald-500">${v.jasaRate}</div>
                             </td>
@@ -336,11 +337,11 @@
                         td.classList.add('col-hl-td');
                         if (idx === 4) {
                             // 자사몰: 판매가 보라색, 배율 밝은 보라 (굵기 유지 안함)
-                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; }
+                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; } // 자사몰
                             if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
                         } else {
                             // 타채널: 판매가 진한 보라+굵게, 배율 밝은 보라
-                            if (priceEl) { priceEl.style.color = '#3b0764'; priceEl.style.fontWeight = '700'; }
+                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; } // 타채널
                             if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
                         }
                     } else {
