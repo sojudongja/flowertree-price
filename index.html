@@ -12,17 +12,15 @@
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .variant-row:hover { background-color: #f0fdf4; }
         .variant-row:nth-child(even) { background-color: #f8fafc; }
-        .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
         .th-wrap { white-space: normal; line-height: 1.4; }
-        .col-hl-th { background: rgba(139,92,246,0.2) !important; color: #5b21b6 !important; }
-        .variant-row:nth-child(odd) .col-hl-td { background: rgba(139,92,246,0.1) !important; }
-        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.18) !important; }
-        .variant-row:nth-child(odd):hover .col-hl-td { background: rgba(139,92,246,0.2) !important; }
-        .variant-row:nth-child(even):hover .col-hl-td { background: rgba(139,92,246,0.28) !important; }
-        .col-hl-td .price { color: #3b0764 !important; font-weight: 700 !important; }
-        .col-hl-td .rate { color: #a78bfa !important; }
+        /* 컬럼 하이라이트 - 배경 연하게 */
+        .variant-row:nth-child(odd) .col-hl-td { background: rgba(139,92,246,0.07) !important; }
+        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.12) !important; }
+        /* 행 hover - 하이라이트 컬럼은 보라 유지 */
+        .variant-row:hover td:not(.col-hl-td) { background: #f0fdf4 !important; }
+        .variant-row:nth-child(odd):hover .col-hl-td { background: rgba(139,92,246,0.12) !important; }
+        .variant-row:nth-child(even):hover .col-hl-td { background: rgba(139,92,246,0.17) !important; }
         .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
         .ch-th .sub { display: block; font-size: 9px; color: #94a3b8; font-weight: 400; line-height: 1.4; }
         .ch-th .main { display: block; font-size: 11px; font-weight: 600; }
@@ -332,23 +330,38 @@
             document.querySelectorAll('th[data-col]').forEach(th => {
                 const col = parseInt(th.dataset.col);
                 if (activeCols.has(col)) {
-                    th.classList.add('col-hl-th');
+                    th.style.background = 'rgba(139,92,246,0.15)';
+                    th.style.color = '#5b21b6';
                 } else {
-                    th.classList.remove('col-hl-th');
+                    th.style.background = '';
+                    th.style.color = '';
                 }
             });
-            // tbody td 하이라이트 (0-based index)
-            document.querySelectorAll('tbody tr').forEach(row => {
+
+            // tbody td 하이라이트
+            document.querySelectorAll('tbody tr.variant-row').forEach(row => {
                 row.querySelectorAll('td').forEach((td, idx) => {
                     if (activeCols.has(idx)) {
                         td.classList.add('col-hl-td');
-                        // price/rate 클래스 적용
                         const priceEl = td.querySelector('div:first-child');
                         const rateEl = td.querySelector('div:last-child');
-                        if (priceEl) priceEl.classList.add('price');
-                        if (rateEl) rateEl.classList.add('rate');
+                        const isJasa = idx === 4; // 자사몰 인덱스
+
+                        if (isJasa) {
+                            // 자사몰: 판매가 보라색, 배율 굵기 제거
+                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = ''; }
+                            if (rateEl)  { rateEl.style.color = '#a78bfa'; rateEl.style.fontWeight = 'normal'; }
+                        } else {
+                            // 타채널: 판매가 굵게+진한보라, 배율 밝은보라+굵기 제거
+                            if (priceEl) { priceEl.style.color = '#3b0764'; priceEl.style.fontWeight = '700'; }
+                            if (rateEl)  { rateEl.style.color = '#a78bfa'; rateEl.style.fontWeight = 'normal'; }
+                        }
                     } else {
                         td.classList.remove('col-hl-td');
+                        const priceEl = td.querySelector('div:first-child');
+                        const rateEl = td.querySelector('div:last-child');
+                        if (priceEl) { priceEl.style.color = ''; priceEl.style.fontWeight = ''; }
+                        if (rateEl)  { rateEl.style.color = ''; rateEl.style.fontWeight = ''; }
                     }
                 });
             });
