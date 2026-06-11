@@ -12,18 +12,21 @@
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 홀수/짝수 행 */
         .variant-row:nth-child(even) { background-color: #f8fafc; }
-        .th-wrap { white-space: normal; line-height: 1.4; }
-        /* 컬럼 하이라이트 - 배경 연하게 */
-        .variant-row:nth-child(odd) .col-hl-td { background: rgba(139,92,246,0.07) !important; }
-        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.12) !important; }
-        /* 행 hover - 하이라이트 컬럼은 보라 유지 */
-        .variant-row:hover td:not(.col-hl-td) { background: #f0fdf4 !important; }
-        .variant-row:nth-child(odd):hover .col-hl-td { background: rgba(139,92,246,0.12) !important; }
-        .variant-row:nth-child(even):hover .col-hl-td { background: rgba(139,92,246,0.17) !important; }
+
+        /* 행 hover - 하이라이트 없는 셀만 녹색 */
+        .variant-row:hover td:not(.col-hl-td) { background-color: #f0fdf4; }
+
+        /* 채널 헤더 공통 */
         .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
-        .ch-th .sub { display: block; font-size: 9px; color: #94a3b8; font-weight: 400; line-height: 1.4; }
-        .ch-th .main { display: block; font-size: 11px; font-weight: 600; }
+
+        /* 컬럼 하이라이트 - 홀수/짝수 구분 */
+        .variant-row:nth-child(odd) .col-hl-td  { background: rgba(139,92,246,0.07) !important; }
+        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.13) !important; }
+        /* 하이라이트 셀 hover */
+        .variant-row:hover .col-hl-td { background: rgba(139,92,246,0.18) !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -45,7 +48,7 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </div>
                     <input type="text" id="searchInput"
-                           class="block w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
+                           class="block w-full pl-10 pr-20 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
                            placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (예: ABSG16001, 진달래, 105164)" autofocus>
                     <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
                         <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
@@ -118,9 +121,7 @@
             }
         }
 
-        function getMainCode(pumbun) {
-            return pumbun.replace(/-\d+$/, '');
-        }
+        function getMainCode(pumbun) { return pumbun.replace(/-\d+$/, ''); }
 
         function getStatusOrder(status) {
             const s = (status || '').split(',')[0].trim();
@@ -147,17 +148,13 @@
                 if (!groupMap.has(mainCode)) groupMap.set(mainCode, []);
                 groupMap.get(mainCode).push(item);
             });
-
-            // 옵션 행 정렬: 1순위 판매상태, 2순위 코드 번호
-            groupMap.forEach((variants, key) => {
+            groupMap.forEach((variants) => {
                 variants.sort((a, b) => {
                     const statusDiff = getStatusOrder(a.status) - getStatusOrder(b.status);
                     if (statusDiff !== 0) return statusDiff;
                     return getVariantNumber(a.pumbun) - getVariantNumber(b.pumbun);
                 });
             });
-
-            // 카드 정렬: 메인코드 오름차순
             return new Map([...groupMap.entries()].sort((a, b) => a[0].localeCompare(b[0])));
         }
 
@@ -174,18 +171,16 @@
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">검색어를 입력해 주세요.</h3>
                         <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드 모두 검색 가능합니다.</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
             const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
-
             const filtered = masterData.filter(item => {
-                var targetPumbun  = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
-                var targetName    = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
-                var targetSabang  = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
-                return targetPumbun.includes(cleanKeyword) || targetName.includes(cleanKeyword) || targetSabang.includes(cleanKeyword);
+                var a = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
+                var b = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
+                var c = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
+                return a.includes(cleanKeyword) || b.includes(cleanKeyword) || c.includes(cleanKeyword);
             });
 
             const grouped = groupByMainCode(filtered);
@@ -198,21 +193,18 @@
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">'${keyword}'에 매칭되는 상품이 없습니다.</h3>
                         <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드를 확인해 주세요.</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
             let htmlString = "";
-
             grouped.forEach((variants, mainCode) => {
                 const rep = variants[0];
                 const linkHref = rep.link && rep.link !== "#" ? rep.link.trim() : null;
                 const linkBtn = linkHref
                     ? `<a href="${linkHref}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 text-xs transition-all flex-shrink-0">
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> 바로가기
-                       </a>`
-                    : "";
+                       </a>` : "";
                 const titleLink = `<span class="text-base font-bold text-slate-900 flex-shrink-0">${mainCode}</span>
                                    <span class="text-slate-300 flex-shrink-0">|</span>
                                    <span class="text-base font-bold text-slate-900">${rep.prodName}</span>
@@ -243,25 +235,26 @@
                                     return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
                                 }).join('')}
                             </td>
-                            <td class="py-2 px-3 border-r border-slate-100 font-bold text-emerald-700 whitespace-nowrap" style="background:rgba(236,253,245,0.4);">${v.jasa}<div class="text-[10px] text-emerald-500 font-normal">${v.jasaRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.coupang}<div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.naver}<div class="text-[10px] text-slate-400">${v.naverRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.ohouse}<div class="text-[10px] text-slate-400">${v.ohouseRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.gmarket}<div class="text-[10px] text-slate-400">${v.gmarketRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.ssg}<div class="text-[10px] text-slate-400">${v.ssgRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.lotte}<div class="text-[10px] text-slate-400">${v.lotteRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.artbox}<div class="text-[10px] text-slate-400">${v.artboxRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.godpeople}<div class="text-[10px] text-slate-400">${v.godpeopleRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap" style="background:rgba(236,253,245,0.4);">
+                                <div class="font-bold text-emerald-700">${v.jasa}</div>
+                                <div class="text-[10px] text-emerald-500">${v.jasaRate}</div>
+                            </td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.coupang}</div><div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.naver}</div><div class="text-[10px] text-slate-400">${v.naverRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.ohouse}</div><div class="text-[10px] text-slate-400">${v.ohouseRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.gmarket}</div><div class="text-[10px] text-slate-400">${v.gmarketRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.ssg}</div><div class="text-[10px] text-slate-400">${v.ssgRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.lotte}</div><div class="text-[10px] text-slate-400">${v.lotteRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.artbox}</div><div class="text-[10px] text-slate-400">${v.artboxRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.godpeople}</div><div class="text-[10px] text-slate-400">${v.godpeopleRate}</div></td>
                             <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap">${v.delivery}</td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
 
                 htmlString += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
-                        <img src="${rep.img}" alt="상품이미지"
-                             onerror="this.src='https://placehold.co/64x64?text=No+Img'"
+                        <img src="${rep.img}" alt="상품이미지" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
                              class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap mb-1">
@@ -280,7 +273,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="overflow-x-auto no-scrollbar">
                         <table class="w-full text-center" style="min-width:1100px;">
                             <thead>
@@ -301,13 +293,10 @@
                                     <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">배송구분</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                ${variantRows}
-                            </tbody>
+                            <tbody>${variantRows}</tbody>
                         </table>
                     </div>
-                </div>
-                `;
+                </div>`;
             });
 
             container.innerHTML = htmlString;
@@ -326,7 +315,7 @@
         }
 
         function applyColHighlight() {
-            // 헤더 하이라이트
+            // 헤더
             document.querySelectorAll('th[data-col]').forEach(th => {
                 const col = parseInt(th.dataset.col);
                 if (activeCols.has(col)) {
@@ -338,30 +327,26 @@
                 }
             });
 
-            // tbody td 하이라이트
+            // tbody 셀
             document.querySelectorAll('tbody tr.variant-row').forEach(row => {
                 row.querySelectorAll('td').forEach((td, idx) => {
+                    const priceEl = td.querySelector('div:first-child');
+                    const rateEl  = td.querySelector('div:last-child');
                     if (activeCols.has(idx)) {
                         td.classList.add('col-hl-td');
-                        const priceEl = td.querySelector('div:first-child');
-                        const rateEl = td.querySelector('div:last-child');
-                        const isJasa = idx === 4; // 자사몰 인덱스
-
-                        if (isJasa) {
-                            // 자사몰: 판매가 보라색, 배율 굵기 제거
-                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = ''; }
-                            if (rateEl)  { rateEl.style.color = '#a78bfa'; rateEl.style.fontWeight = 'normal'; }
+                        if (idx === 4) {
+                            // 자사몰: 판매가 보라색, 배율 밝은 보라 (굵기 유지 안함)
+                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; }
+                            if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
                         } else {
-                            // 타채널: 판매가 굵게+진한보라, 배율 밝은보라+굵기 제거
+                            // 타채널: 판매가 진한 보라+굵게, 배율 밝은 보라
                             if (priceEl) { priceEl.style.color = '#3b0764'; priceEl.style.fontWeight = '700'; }
-                            if (rateEl)  { rateEl.style.color = '#a78bfa'; rateEl.style.fontWeight = 'normal'; }
+                            if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
                         }
                     } else {
                         td.classList.remove('col-hl-td');
-                        const priceEl = td.querySelector('div:first-child');
-                        const rateEl = td.querySelector('div:last-child');
                         if (priceEl) { priceEl.style.color = ''; priceEl.style.fontWeight = ''; }
-                        if (rateEl)  { rateEl.style.color = ''; rateEl.style.fontWeight = ''; }
+                        if (rateEl)  { rateEl.style.color  = ''; rateEl.style.fontWeight  = ''; }
                     }
                 });
             });
