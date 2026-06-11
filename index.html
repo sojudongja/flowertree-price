@@ -323,8 +323,9 @@
                     th.style.background = 'rgba(139,92,246,0.15)';
                     th.style.color = '#5b21b6';
                 } else {
-                    th.style.background = '';
-                    th.style.color = '';
+                    // 자사몰 헤더는 해제 시 원래 녹색으로 복구
+                    th.style.background = col === 4 ? 'rgba(236,253,245,0.4)' : '';
+                    th.style.color = col === 4 ? '#065f46' : '';
                 }
             });
 
@@ -346,8 +347,14 @@
                         }
                     } else {
                         td.classList.remove('col-hl-td');
-                        if (priceEl) { priceEl.style.color = ''; priceEl.style.fontWeight = ''; }
-                        if (rateEl)  { rateEl.style.color  = ''; rateEl.style.fontWeight  = ''; }
+                        if (idx === 4) {
+                            // 자사몰 셀 해제 시 emerald 색상 복구
+                            if (priceEl) { priceEl.style.color = '#065f46'; priceEl.style.fontWeight = '700'; }
+                            if (rateEl)  { rateEl.style.color  = '#10b981'; rateEl.style.fontWeight  = ''; }
+                        } else {
+                            if (priceEl) { priceEl.style.color = ''; priceEl.style.fontWeight = ''; }
+                            if (rateEl)  { rateEl.style.color  = ''; rateEl.style.fontWeight  = ''; }
+                        }
                     }
                 });
             });
