@@ -16,8 +16,13 @@
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:nth-child(even):hover { background-color: #f0fdf4; }
         .th-wrap { white-space: normal; line-height: 1.4; }
-        .col-highlight { background-color: #ede9fe !important; color: #5b21b6 !important; }
-        .col-highlight * { color: #5b21b6 !important; }
+        .col-hl-th { background: rgba(139,92,246,0.2) !important; color: #5b21b6 !important; }
+        .variant-row:nth-child(odd) .col-hl-td { background: rgba(139,92,246,0.1) !important; }
+        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.18) !important; }
+        .variant-row:nth-child(odd):hover .col-hl-td { background: rgba(139,92,246,0.2) !important; }
+        .variant-row:nth-child(even):hover .col-hl-td { background: rgba(139,92,246,0.28) !important; }
+        .col-hl-td .price { color: #3b0764 !important; font-weight: 700 !important; }
+        .col-hl-td .rate { color: #a78bfa !important; }
         .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
         .ch-th .sub { display: block; font-size: 9px; color: #94a3b8; font-weight: 400; line-height: 1.4; }
         .ch-th .main { display: block; font-size: 11px; font-weight: 600; }
@@ -240,7 +245,7 @@
                                     return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
                                 }).join('')}
                             </td>
-                            <td class="py-2 px-3 border-r border-slate-100 font-bold text-emerald-700 bg-emerald-50/30 whitespace-nowrap">${v.jasa}<div class="text-[10px] text-emerald-500 font-normal">${v.jasaRate}</div></td>
+                            <td class="py-2 px-3 border-r border-slate-100 font-bold text-emerald-700 whitespace-nowrap" style="background:rgba(236,253,245,0.4);">${v.jasa}<div class="text-[10px] text-emerald-500 font-normal">${v.jasaRate}</div></td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.coupang}<div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.naver}<div class="text-[10px] text-slate-400">${v.naverRate}</div></td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.ohouse}<div class="text-[10px] text-slate-400">${v.ohouseRate}</div></td>
@@ -286,7 +291,7 @@
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷 품번코드</th>
                                     <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">판매상태</th>
-                                    <th class="ch-th" data-col="4" onclick="toggleCol(4)" style="background:rgba(236,253,245,0.3); color:#065f46;">자사몰</th>
+                                    <th class="ch-th" data-col="4" onclick="toggleCol(4)" style="background:rgba(236,253,245,0.4); color:#065f46;">자사몰</th>
                                     <th class="ch-th" data-col="5" onclick="toggleCol(5)">쿠팡</th>
                                     <th class="ch-th" data-col="6" onclick="toggleCol(6)">네이버</th>
                                     <th class="ch-th" data-col="7" onclick="toggleCol(7)">오늘의집</th>
@@ -323,19 +328,28 @@
         }
 
         function applyColHighlight() {
-            // 모든 테이블의 해당 컬럼 적용
-            document.querySelectorAll('table').forEach(table => {
-                table.querySelectorAll('tr').forEach(row => {
-                    row.querySelectorAll('th[data-col], td').forEach((cell, idx) => {
-                        const colIdx = cell.dataset && cell.dataset.col
-                            ? parseInt(cell.dataset.col)
-                            : idx;
-                        if (activeCols.has(colIdx)) {
-                            cell.classList.add('col-highlight');
-                        } else {
-                            cell.classList.remove('col-highlight');
-                        }
-                    });
+            // 헤더 하이라이트
+            document.querySelectorAll('th[data-col]').forEach(th => {
+                const col = parseInt(th.dataset.col);
+                if (activeCols.has(col)) {
+                    th.classList.add('col-hl-th');
+                } else {
+                    th.classList.remove('col-hl-th');
+                }
+            });
+            // tbody td 하이라이트 (0-based index)
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.querySelectorAll('td').forEach((td, idx) => {
+                    if (activeCols.has(idx)) {
+                        td.classList.add('col-hl-td');
+                        // price/rate 클래스 적용
+                        const priceEl = td.querySelector('div:first-child');
+                        const rateEl = td.querySelector('div:last-child');
+                        if (priceEl) priceEl.classList.add('price');
+                        if (rateEl) rateEl.classList.add('rate');
+                    } else {
+                        td.classList.remove('col-hl-td');
+                    }
                 });
             });
         }
