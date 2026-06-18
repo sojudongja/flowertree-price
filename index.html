@@ -12,21 +12,12 @@
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* 홀수/짝수 행 */
         .variant-row:nth-child(even) { background-color: #f8fafc; }
-
-        /* 행 hover - 하이라이트 없는 셀만 녹색 */
         .variant-row:hover td:not(.col-hl-td) { background-color: #f0fdf4; }
-
-        /* 채널 헤더 공통 */
         .jasa-base { background: rgba(236,253,245,0.4); }
         .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
-
-        /* 컬럼 하이라이트 - 홀수/짝수 구분 */
         .variant-row:nth-child(odd) .col-hl-td  { background: rgba(139,92,246,0.07) !important; }
         .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.13) !important; }
-        /* 하이라이트 셀 hover */
         .variant-row:hover .col-hl-td { background: rgba(139,92,246,0.18) !important; }
     </style>
 </head>
@@ -226,11 +217,11 @@
                                     if (t.startsWith('-')) cls = 'background:#f1f5f9; color:#94a3b8;';
                                     else if (t.includes('신규')) cls = 'background:#ede9fe; color:#5b21b6;';
                                     else if (t.includes('리뉴얼')) cls = 'background:#bfdbfe; color:#1d4ed8;';
-                                    else if (t.includes('판매중')) cls = 'background:#dbeafe; color:#1e40af;';
+                                    else if (t.includes('판매중지')) cls = 'background:#fee2e2; color:#b91c1c;';
                                     else if (t.includes('3차')) cls = 'background:#fecaca; color:#991b1b;';
                                     else if (t.includes('2차')) cls = 'background:#fed7aa; color:#9a3412;';
                                     else if (t.includes('1차')) cls = 'background:#fef9c3; color:#854d0e;';
-                                    else if (t.includes('판매중지')) cls = 'background:#fee2e2; color:#b91c1c;';
+                                    else if (t.includes('판매중')) cls = 'background:#dbeafe; color:#1e40af;';
                                     else if (t.includes('단종')) cls = 'background:#e2e8f0; color:#475569;';
                                     else cls = 'background:#f1f5f9; color:#94a3b8;';
                                     return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
@@ -316,39 +307,28 @@
         }
 
         function applyColHighlight() {
-            // 헤더
             document.querySelectorAll('th[data-col]').forEach(th => {
                 const col = parseInt(th.dataset.col);
                 if (activeCols.has(col)) {
                     th.style.background = 'rgba(139,92,246,0.15)';
                     th.style.color = '#5b21b6';
                 } else {
-                    // 자사몰 헤더는 해제 시 원래 녹색으로 복구
                     th.style.background = col === 4 ? 'rgba(236,253,245,0.4)' : '';
                     th.style.color = col === 4 ? '#065f46' : '';
                 }
             });
 
-            // tbody 셀
             document.querySelectorAll('tbody tr.variant-row').forEach(row => {
                 row.querySelectorAll('td').forEach((td, idx) => {
                     const priceEl = td.querySelector('div:first-child');
                     const rateEl  = td.querySelector('div:last-child');
                     if (activeCols.has(idx)) {
                         td.classList.add('col-hl-td');
-                        if (idx === 4) {
-                            // 자사몰: 판매가 보라색, 배율 밝은 보라 (굵기 유지 안함)
-                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; } // 자사몰
-                            if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
-                        } else {
-                            // 타채널: 판매가 진한 보라+굵게, 배율 밝은 보라
-                            if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; } // 타채널
-                            if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
-                        }
+                        if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; }
+                        if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
                     } else {
                         td.classList.remove('col-hl-td');
                         if (idx === 4) {
-                            // 자사몰 셀 해제 시 emerald 색상 복구
                             if (priceEl) { priceEl.style.color = '#065f46'; priceEl.style.fontWeight = '700'; }
                             if (rateEl)  { rateEl.style.color  = '#10b981'; rateEl.style.fontWeight  = ''; }
                         } else {
