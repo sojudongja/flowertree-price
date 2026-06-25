@@ -13,12 +13,29 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .variant-row:nth-child(even) { background-color: #f8fafc; }
-        .variant-row:hover td:not(.col-hl-td) { background-color: #f0fdf4; }
-        .jasa-base { background: rgba(236,253,245,0.4); }
-        .ch-th { width: 80px; min-width: 80px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; cursor: pointer; user-select: none; }
-        .variant-row:nth-child(odd) .col-hl-td  { background: rgba(139,92,246,0.07) !important; }
-        .variant-row:nth-child(even) .col-hl-td { background: rgba(139,92,246,0.13) !important; }
-        .variant-row:hover .col-hl-td { background: rgba(139,92,246,0.18) !important; }
+        .variant-row:hover td { background-color: #f0fdf4; }
+        .ch-th { padding: 0; text-align: center; border-right: 1px solid #f1f5f9; height: 78px; box-sizing: border-box; }
+        .ch-th-inner { display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 100%; padding: 4px 6px 8px 6px; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.4; box-sizing: border-box; }
+
+        /* 채널 필터 칩 */
+        .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+        .filter-label { font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 6px; display: block; }
+        .chip-group { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; }
+        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+        .chip:hover { border-color: #cbd5e1; }
+        .chip.active { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; font-weight: 600; }
+        .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+        .chip.active .dot { background: #10b981; }
+
+        /* 고정 테이블 레이아웃: 컬럼 너비를 전부 명시적으로 고정 */
+        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; }
+        .col-code   { width: 155px; }
+        .col-color  { width: 70px; }
+        .col-sabang { width: 100px; }
+        .col-status { width: 90px; }
+        .col-ch     { width: 80px; }
+        .col-deliv  { width: 90px; }
+        .hidden-col { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -32,7 +49,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-slate-900 tracking-tight"> 플라워트리 가격 검색기</h1>
-                        <p class="text-xs text-slate-500 mt-0.5">독립 서버 구동형 (실시간 초고속 모드)</p>
+                        <p class="text-xs text-slate-500 mt-0.5">독립 서버 구동형 (실시간 초고속 모드 v1.1)</p>
                     </div>
                 </div>
                 <div class="relative flex-1 max-w-xl md:ml-auto">
@@ -52,7 +69,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개</span>
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건 (<strong id="groupCount" class="text-emerald-600 font-bold">0</strong>개 상품)</span>
@@ -61,6 +78,22 @@
                 <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500 border border-slate-200">
                     <span class="h-1.5 w-1.5 rounded-full bg-slate-400 mr-1.5"></span>로딩 중
                 </span>
+            </div>
+        </div>
+
+        <!-- 채널 필터 -->
+        <div class="filter-bar">
+            <span class="filter-label">채널 필터 (선택 시 해당 채널만 표시 · 미선택 시 전체 표시)</span>
+            <div class="chip-group" id="channelFilterBar">
+                <label class="chip" data-channel="jasa"><span class="dot"></span>자사몰</label>
+                <label class="chip" data-channel="coupang"><span class="dot"></span>쿠팡</label>
+                <label class="chip" data-channel="naver"><span class="dot"></span>네이버</label>
+                <label class="chip" data-channel="ohouse"><span class="dot"></span>오늘의집</label>
+                <label class="chip" data-channel="gmarket"><span class="dot"></span>지마켓/옥션/11번가/롯데온</label>
+                <label class="chip" data-channel="ssg"><span class="dot"></span>신세계몰/GS SHOP/현대홈쇼핑</label>
+                <label class="chip" data-channel="lotte"><span class="dot"></span>CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑</label>
+                <label class="chip" data-channel="artbox"><span class="dot"></span>핫트랙스/텐바이텐/아트박스</label>
+                <label class="chip" data-channel="godpeople"><span class="dot"></span>카카오</label>
             </div>
         </div>
 
@@ -73,8 +106,29 @@
         </div>
     </main>
 
+    <!-- 이미지 라이트박스 -->
+    <div id="imageLightbox" onclick="closeImageLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out;">
+        <img id="lightboxImg" src="" alt="원본 이미지" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+        <button onclick="closeImageLightbox()" style="position:absolute; top:20px; right:24px; color:white; font-size:32px; background:none; border:none; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+
     <script>
         let masterData = [];
+        let lastKeyword = "";
+        const activeChannels = new Set(); // 비어있으면 전체 표시
+
+        // 채널 정의: key(=class suffix) → {name, priceKey, rateKey, label}
+        const CHANNELS = [
+            { key: 'jasa',      name: '자사몰',   priceKey: 'jasa',      rateKey: 'jasaRate' },
+            { key: 'coupang',   name: '쿠팡',     priceKey: 'coupang',   rateKey: 'coupangRate' },
+            { key: 'naver',     name: '네이버',   priceKey: 'naver',     rateKey: 'naverRate' },
+            { key: 'ohouse',    name: '오늘의집', priceKey: 'ohouse',    rateKey: 'ohouseRate' },
+            { key: 'gmarket',   name: '지마켓/옥션/11번가/롯데온', priceKey: 'gmarket', rateKey: 'gmarketRate', label: '지마켓<br>옥션<br>11번가<br>롯데온' },
+            { key: 'ssg',       name: '신세계몰/GS SHOP/현대홈쇼핑', priceKey: 'ssg', rateKey: 'ssgRate', label: '신세계몰<br>GS SHOP<br>현대홈쇼핑' },
+            { key: 'lotte',     name: 'CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑', priceKey: 'lotte', rateKey: 'lotteRate', label: 'CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑' },
+            { key: 'artbox',    name: '핫트랙스/텐바이텐/아트박스', priceKey: 'artbox', rateKey: 'artboxRate', label: '핫트랙스<br>텐바이텐<br>아트박스' },
+            { key: 'godpeople', name: '카카오',   priceKey: 'godpeople', rateKey: 'godpeopleRate' }
+        ];
 
         async function loadData() {
             const spinner = document.getElementById('loadingSpinner');
@@ -109,6 +163,7 @@
                 `;
             } finally {
                 initInputListener();
+                initChannelFilter();
                 spinner.classList.add('hidden');
             }
         }
@@ -150,7 +205,44 @@
             return new Map([...groupMap.entries()].sort((a, b) => a[0].localeCompare(b[0])));
         }
 
+        function getVisibleChannelList() {
+            if (activeChannels.size === 0) return CHANNELS;
+            return CHANNELS.filter(ch => activeChannels.has(ch.key));
+        }
+
+        function renderChannelHeaders() {
+            const visible = getVisibleChannelList();
+            const emptyCount = CHANNELS.length - visible.length;
+            let html = visible.map(ch => {
+                const label = ch.label || ch.name;
+                return `<th class="ch-th col-ch"><div class="ch-th-inner">${label}</div></th>`;
+            }).join('');
+            // 선택 안 한 만큼 빈 칸으로 채움 (배송구분 앞까지 위치 고정)
+            for (let i = 0; i < emptyCount; i++) {
+                html += `<th class="ch-th col-ch" style="border-right:1px solid #f1f5f9;"><div class="ch-th-inner"></div></th>`;
+            }
+            return html;
+        }
+
+        function renderChannelCells(v) {
+            const visible = getVisibleChannelList();
+            const emptyCount = CHANNELS.length - visible.length;
+            let html = visible.map(ch => {
+                const price = v[ch.priceKey];
+                const rate = v[ch.rateKey];
+                return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch">
+                            <div class="font-bold text-slate-800">${price}</div>
+                            <div class="text-[10px] text-slate-400">${rate}</div>
+                        </td>`;
+            }).join('');
+            for (let i = 0; i < emptyCount; i++) {
+                html += `<td class="py-2 px-3 border-r border-slate-100 col-ch"></td>`;
+            }
+            return html;
+        }
+
         function performSearch(keyword) {
+            lastKeyword = keyword;
             const container = document.getElementById('resultsContainer');
             const matchCountEl = document.getElementById('matchCount');
             const groupCountEl = document.getElementById('groupCount');
@@ -189,7 +281,13 @@
                 return;
             }
 
+            renderResults(grouped);
+        }
+
+        function renderResults(grouped) {
+            const container = document.getElementById('resultsContainer');
             let htmlString = "";
+
             grouped.forEach((variants, mainCode) => {
                 const rep = variants[0];
                 const linkHref = rep.link && rep.link !== "#" ? rep.link.trim() : null;
@@ -206,10 +304,10 @@
                 variants.forEach(v => {
                     variantRows += `
                         <tr class="variant-row text-xs">
-                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-sm" style="text-align:center !important;">${v.pumbun}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.color || '-'}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap">${v.sabangCode || '-'}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">
+                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-sm col-code" style="text-align:center !important;">${v.pumbun}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-color">${v.color || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap col-sabang">${v.sabangCode || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-status">
                                 ${(v.status || '-').split(',').map(s => {
                                     const t = s.trim();
                                     if (!t || t === '-') return '';
@@ -227,19 +325,8 @@
                                     return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
                                 }).join('')}
                             </td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap jasa-base">
-                                <div class="font-bold text-emerald-700">${v.jasa}</div>
-                                <div class="text-[10px] text-emerald-500">${v.jasaRate}</div>
-                            </td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.coupang}</div><div class="text-[10px] text-slate-400">${v.coupangRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.naver}</div><div class="text-[10px] text-slate-400">${v.naverRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.ohouse}</div><div class="text-[10px] text-slate-400">${v.ohouseRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.gmarket}</div><div class="text-[10px] text-slate-400">${v.gmarketRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.ssg}</div><div class="text-[10px] text-slate-400">${v.ssgRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.lotte}</div><div class="text-[10px] text-slate-400">${v.lotteRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.artbox}</div><div class="text-[10px] text-slate-400">${v.artboxRate}</div></td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap"><div class="font-bold text-slate-800">${v.godpeople}</div><div class="text-[10px] text-slate-400">${v.godpeopleRate}</div></td>
-                            <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap">${v.delivery}</td>
+                            ${renderChannelCells(v)}
+                            <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap col-deliv">${v.delivery}</td>
                         </tr>`;
                 });
 
@@ -247,7 +334,8 @@
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
                         <img src="${rep.img}" alt="상품이미지" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
-                             class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
+                             onclick="openImageLightbox('${rep.img}')"
+                             class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0 cursor-pointer hover:opacity-80 transition-all">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap mb-1">
                                 <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">${rep.regSheet}</span>
@@ -266,23 +354,15 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="w-full text-center" style="min-width:1100px;">
+                        <table class="price-table" style="min-width:${155+70+100+90+(CHANNELS.length*80)+90}px; width:100%; max-width:${155+70+100+90+(CHANNELS.length*80)+90}px;">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
-                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상품코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷 품번코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">판매상태</th>
-                                    <th class="ch-th" data-col="4" onclick="toggleCol(4)" style="background:rgba(236,253,245,0.4); color:#065f46;">자사몰</th>
-                                    <th class="ch-th" data-col="5" onclick="toggleCol(5)">쿠팡</th>
-                                    <th class="ch-th" data-col="6" onclick="toggleCol(6)">네이버</th>
-                                    <th class="ch-th" data-col="7" onclick="toggleCol(7)">오늘의집</th>
-                                    <th class="ch-th" data-col="8" onclick="toggleCol(8)">지마켓<br>옥션<br>11번가<br>롯데온</th>
-                                    <th class="ch-th" data-col="9" onclick="toggleCol(9)">신세계몰<br>GS SHOP<br>현대홈쇼핑</th>
-                                    <th class="ch-th" data-col="10" onclick="toggleCol(10)">CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑</th>
-                                    <th class="ch-th" data-col="11" onclick="toggleCol(11)">핫트랙스<br>텐바이텐<br>아트박스</th>
-                                    <th class="ch-th" data-col="12" onclick="toggleCol(12)">카카오</th>
-                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">배송구분</th>
+                                    <th class="border-r border-slate-100 col-code" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="justify-content:flex-start; padding-left:12px; color:#64748b;">상품코드</div></th>
+                                    <th class="border-r border-slate-100 col-color" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="color:#64748b;">색상</div></th>
+                                    <th class="border-r border-slate-100 col-sabang" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="color:#64748b;">사방넷 품번코드</div></th>
+                                    <th class="border-r border-slate-100 col-status" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="color:#64748b;">판매상태</div></th>
+                                    ${renderChannelHeaders()}
+                                    <th class="col-deliv" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="color:#64748b;">배송구분</div></th>
                                 </tr>
                             </thead>
                             <tbody>${variantRows}</tbody>
@@ -292,52 +372,38 @@
             });
 
             container.innerHTML = htmlString;
-            applyColHighlight();
         }
 
-        const activeCols = new Set();
-
-        function toggleCol(colIndex) {
-            if (activeCols.has(colIndex)) {
-                activeCols.delete(colIndex);
-            } else {
-                activeCols.add(colIndex);
-            }
-            applyColHighlight();
-        }
-
-        function applyColHighlight() {
-            document.querySelectorAll('th[data-col]').forEach(th => {
-                const col = parseInt(th.dataset.col);
-                if (activeCols.has(col)) {
-                    th.style.background = 'rgba(139,92,246,0.15)';
-                    th.style.color = '#5b21b6';
-                } else {
-                    th.style.background = col === 4 ? 'rgba(236,253,245,0.4)' : '';
-                    th.style.color = col === 4 ? '#065f46' : '';
-                }
-            });
-
-            document.querySelectorAll('tbody tr.variant-row').forEach(row => {
-                row.querySelectorAll('td').forEach((td, idx) => {
-                    const priceEl = td.querySelector('div:first-child');
-                    const rateEl  = td.querySelector('div:last-child');
-                    if (activeCols.has(idx)) {
-                        td.classList.add('col-hl-td');
-                        if (priceEl) { priceEl.style.color = '#5b21b6'; priceEl.style.fontWeight = '700'; }
-                        if (rateEl)  { rateEl.style.color  = '#a78bfa'; rateEl.style.fontWeight  = 'normal'; }
+        function initChannelFilter() {
+            const bar = document.getElementById('channelFilterBar');
+            if (!bar) return;
+            bar.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const key = chip.dataset.channel;
+                    if (activeChannels.has(key)) {
+                        activeChannels.delete(key);
+                        chip.classList.remove('active');
                     } else {
-                        td.classList.remove('col-hl-td');
-                        if (idx === 4) {
-                            if (priceEl) { priceEl.style.color = '#065f46'; priceEl.style.fontWeight = '700'; }
-                            if (rateEl)  { rateEl.style.color  = '#10b981'; rateEl.style.fontWeight  = ''; }
-                        } else {
-                            if (priceEl) { priceEl.style.color = ''; priceEl.style.fontWeight = ''; }
-                            if (rateEl)  { rateEl.style.color  = ''; rateEl.style.fontWeight  = ''; }
-                        }
+                        activeChannels.add(key);
+                        chip.classList.add('active');
+                    }
+                    // 채널 선택이 바뀌면 현재 검색 결과를 다시 그려서 컬럼을 앞으로 당김
+                    if (lastKeyword && lastKeyword.trim() !== "") {
+                        performSearch(lastKeyword);
                     }
                 });
             });
+        }
+
+        function openImageLightbox(src) {
+            const box = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImg');
+            img.src = src;
+            box.style.display = 'flex';
+        }
+
+        function closeImageLightbox() {
+            document.getElementById('imageLightbox').style.display = 'none';
         }
 
         function doSearch() {
@@ -355,6 +421,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', loadData);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeImageLightbox();
+        });
     </script>
 </body>
 </html>
