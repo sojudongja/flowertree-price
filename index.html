@@ -112,6 +112,20 @@
         <button onclick="closeImageLightbox()" style="position:absolute; top:20px; right:24px; color:white; font-size:32px; background:none; border:none; cursor:pointer; line-height:1;">&times;</button>
     </div>
 
+    <!-- 쿠팡 수량별 판매가 팝업 -->
+    <div id="coupangQtyPopup" onclick="closeCoupangQtyPopup()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+        <div onclick="event.stopPropagation()" style="background:white; border-radius:14px; width:320px; max-width:90vw; box-shadow:0 10px 40px rgba(0,0,0,0.25); overflow:hidden;">
+            <div style="padding:16px 20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1e293b;">쿠팡 수량별 판매가</div>
+                    <div id="coupangPopupSub" style="font-size:11px; color:#94a3b8; margin-top:2px;"></div>
+                </div>
+                <button onclick="closeCoupangQtyPopup()" style="cursor:pointer; color:#94a3b8; font-size:20px; line-height:1; background:none; border:none;">&times;</button>
+            </div>
+            <div id="coupangPopupBody" style="padding:8px 20px 16px;"></div>
+        </div>
+    </div>
+
     <script>
         let masterData = [];
         let lastKeyword = "";
@@ -230,6 +244,14 @@
             let html = visible.map(ch => {
                 const price = v[ch.priceKey];
                 const rate = v[ch.rateKey];
+                if (ch.key === 'coupang') {
+                    const safePumbun = (v.pumbun || '').replace(/'/g, "\\'");
+                    const safeName = (v.prodName || '').replace(/'/g, "\\'");
+                    return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch" style="cursor:pointer;" onclick="openCoupangQtyPopup('${price}', '${safePumbun}', '${safeName}')" title="클릭하면 수량별 판매가를 볼 수 있어요">
+                                <div class="font-bold text-slate-800" style="text-decoration:underline; text-decoration-style:dotted; text-decoration-color:#cbd5e1;">${price}</div>
+                                <div class="text-[10px] text-slate-400">${rate}</div>
+                            </td>`;
+                }
                 return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch">
                             <div class="font-bold text-slate-800">${price}</div>
                             <div class="text-[10px] text-slate-400">${rate}</div>
@@ -395,6 +417,57 @@
             });
         }
 
+        function parsePriceToNumber(priceStr) {
+            if (!priceStr || priceStr === '-') return null;
+            const cleaned = String(priceStr).replace(/[^0-9.]/g, '');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? null : num;
+        }
+
+        function roundTo100(num) {
+            return Math.round(num / 100) * 100;
+        }
+
+        function openCoupangQtyPopup(priceStr, pumbun, prodName) {
+            const unitPrice = parsePriceToNumber(priceStr);
+            const sub = document.getElementById('coupangPopupSub');
+            const body = document.getElementById('coupangPopupBody');
+
+            sub.textContent = `${pumbun} · ${prodName}`;
+
+            if (unitPrice === null) {
+                body.innerHTML = `<div style="padding:16px 0; text-align:center; color:#94a3b8; font-size:13px;">가격 정보가 없어 계산할 수 없어요.</div>`;
+            } else {
+                const tiers = [
+                    { qty: 1,  discount: 0 },
+                    { qty: 3,  discount: 0.03 },
+                    { qty: 6,  discount: 0.04 },
+                    { qty: 12, discount: 0.06 }
+                ];
+
+                body.innerHTML = tiers.map(t => {
+                    const rawTotal = unitPrice * t.qty * (1 - t.discount);
+                    const total = roundTo100(rawTotal);
+                    const perUnit = Math.round(total / t.qty);
+                    const discountLabel = t.discount > 0 ? `<span style="font-size:10px; color:#94a3b8; margin-left:4px;">(${(t.discount*100).toFixed(0)}% 할인)</span>` : '';
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f8fafc;">
+                            <span style="font-size:13px; color:#475569; font-weight:600;">${t.qty}개${discountLabel}</span>
+                            <div style="text-align:right;">
+                                <div style="font-size:15px; font-weight:700; color:#1e293b;">${total.toLocaleString()}원</div>
+                                <div style="font-size:10px; color:#94a3b8; margin-top:1px;">개당 ${perUnit.toLocaleString()}원</div>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+            document.getElementById('coupangQtyPopup').style.display = 'flex';
+        }
+
+        function closeCoupangQtyPopup() {
+            document.getElementById('coupangQtyPopup').style.display = 'none';
+        }
+
         function openImageLightbox(src) {
             const box = document.getElementById('imageLightbox');
             const img = document.getElementById('lightboxImg');
@@ -422,7 +495,10 @@
 
         window.addEventListener('DOMContentLoaded', loadData);
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeImageLightbox();
+            if (e.key === 'Escape') {
+                closeImageLightbox();
+                closeCoupangQtyPopup();
+            }
         });
     </script>
 </body>
