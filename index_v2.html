@@ -14,8 +14,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:hover td { background-color: #f0fdf4; }
-        .jasa-base { background: rgba(236,253,245,0.4); }
-        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; }
+        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; overflow: hidden; }
 
         /* 채널 필터 칩 */
         .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
@@ -24,9 +23,18 @@
         .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: #cbd5e1; }
         .chip.active { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; font-weight: 600; }
-        .chip input { display: none; }
         .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
         .chip.active .dot { background: #10b981; }
+
+        /* 고정 테이블 레이아웃: 컬럼 너비를 전부 명시적으로 고정 */
+        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; }
+        .col-code   { width: 120px; }
+        .col-color  { width: 80px; }
+        .col-sabang { width: 110px; }
+        .col-status { width: 140px; }
+        .col-ch     { width: 90px; }
+        .col-deliv  { width: 100px; }
+        .hidden-col { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -76,15 +84,15 @@
         <div class="filter-bar">
             <span class="filter-label">채널 필터 (선택 시 해당 채널만 표시 · 미선택 시 전체 표시)</span>
             <div class="chip-group" id="channelFilterBar">
-                <label class="chip" data-channel="4"><span class="dot"></span>자사몰</label>
-                <label class="chip" data-channel="5"><span class="dot"></span>쿠팡</label>
-                <label class="chip" data-channel="6"><span class="dot"></span>네이버</label>
-                <label class="chip" data-channel="7"><span class="dot"></span>오늘의집</label>
-                <label class="chip" data-channel="8"><span class="dot"></span>지마켓/옥션/11번가/롯데온</label>
-                <label class="chip" data-channel="9"><span class="dot"></span>신세계몰/GS SHOP/현대홈쇼핑</label>
-                <label class="chip" data-channel="10"><span class="dot"></span>CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑</label>
-                <label class="chip" data-channel="11"><span class="dot"></span>핫트랙스/텐바이텐/아트박스</label>
-                <label class="chip" data-channel="12"><span class="dot"></span>카카오</label>
+                <label class="chip" data-channel="jasa"><span class="dot"></span>자사몰</label>
+                <label class="chip" data-channel="coupang"><span class="dot"></span>쿠팡</label>
+                <label class="chip" data-channel="naver"><span class="dot"></span>네이버</label>
+                <label class="chip" data-channel="ohouse"><span class="dot"></span>오늘의집</label>
+                <label class="chip" data-channel="gmarket"><span class="dot"></span>지마켓/옥션/11번가/롯데온</label>
+                <label class="chip" data-channel="ssg"><span class="dot"></span>신세계몰/GS SHOP/현대홈쇼핑</label>
+                <label class="chip" data-channel="lotte"><span class="dot"></span>CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑</label>
+                <label class="chip" data-channel="artbox"><span class="dot"></span>핫트랙스/텐바이텐/아트박스</label>
+                <label class="chip" data-channel="godpeople"><span class="dot"></span>카카오</label>
             </div>
         </div>
 
@@ -102,18 +110,18 @@
         let lastKeyword = "";
         const activeChannels = new Set(); // 비어있으면 전체 표시
 
-        // 채널 정의: col index → {label, key prefix}
-        const CHANNELS = {
-            4:  { name: '자사몰',   priceKey: 'jasa',      rateKey: 'jasaRate' },
-            5:  { name: '쿠팡',     priceKey: 'coupang',   rateKey: 'coupangRate' },
-            6:  { name: '네이버',   priceKey: 'naver',     rateKey: 'naverRate' },
-            7:  { name: '오늘의집', priceKey: 'ohouse',    rateKey: 'ohouseRate' },
-            8:  { name: '지마켓/옥션/11번가/롯데온', priceKey: 'gmarket', rateKey: 'gmarketRate', label: '지마켓<br>옥션<br>11번가<br>롯데온' },
-            9:  { name: '신세계몰/GS SHOP/현대홈쇼핑', priceKey: 'ssg', rateKey: 'ssgRate', label: '신세계몰<br>GS SHOP<br>현대홈쇼핑' },
-            10: { name: 'CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑', priceKey: 'lotte', rateKey: 'lotteRate', label: 'CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑' },
-            11: { name: '핫트랙스/텐바이텐/아트박스', priceKey: 'artbox', rateKey: 'artboxRate', label: '핫트랙스<br>텐바이텐<br>아트박스' },
-            12: { name: '카카오',   priceKey: 'godpeople', rateKey: 'godpeopleRate' }
-        };
+        // 채널 정의: key(=class suffix) → {name, priceKey, rateKey, label}
+        const CHANNELS = [
+            { key: 'jasa',      name: '자사몰',   priceKey: 'jasa',      rateKey: 'jasaRate' },
+            { key: 'coupang',   name: '쿠팡',     priceKey: 'coupang',   rateKey: 'coupangRate' },
+            { key: 'naver',     name: '네이버',   priceKey: 'naver',     rateKey: 'naverRate' },
+            { key: 'ohouse',    name: '오늘의집', priceKey: 'ohouse',    rateKey: 'ohouseRate' },
+            { key: 'gmarket',   name: '지마켓/옥션/11번가/롯데온', priceKey: 'gmarket', rateKey: 'gmarketRate', label: '지마켓<br>옥션<br>11번가<br>롯데온' },
+            { key: 'ssg',       name: '신세계몰/GS SHOP/현대홈쇼핑', priceKey: 'ssg', rateKey: 'ssgRate', label: '신세계몰<br>GS SHOP<br>현대홈쇼핑' },
+            { key: 'lotte',     name: 'CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑', priceKey: 'lotte', rateKey: 'lotteRate', label: 'CJ온스타일<br>갓피플몰<br>홈앤쇼핑<br>롯데홈쇼핑' },
+            { key: 'artbox',    name: '핫트랙스/텐바이텐/아트박스', priceKey: 'artbox', rateKey: 'artboxRate', label: '핫트랙스<br>텐바이텐<br>아트박스' },
+            { key: 'godpeople', name: '카카오',   priceKey: 'godpeople', rateKey: 'godpeopleRate' }
+        ];
 
         async function loadData() {
             const spinner = document.getElementById('loadingSpinner');
@@ -190,35 +198,25 @@
             return new Map([...groupMap.entries()].sort((a, b) => a[0].localeCompare(b[0])));
         }
 
-        function getVisibleChannels() {
-            // activeChannels가 비어있으면 전체 채널, 아니면 선택된 것만
-            const allCols = Object.keys(CHANNELS).map(Number);
-            if (activeChannels.size === 0) return allCols;
-            return allCols.filter(c => activeChannels.has(c));
+        function getVisibleChannelList() {
+            if (activeChannels.size === 0) return CHANNELS;
+            return CHANNELS.filter(ch => activeChannels.has(ch.key));
         }
 
         function renderChannelHeaders() {
-            const visibleCols = getVisibleChannels();
-            return visibleCols.map(col => {
-                const ch = CHANNELS[col];
+            return getVisibleChannelList().map(ch => {
                 const label = ch.label || ch.name;
-                const bg = '';
-                return `<th class="ch-th" style="${bg}">${label}</th>`;
+                return `<th class="ch-th col-ch">${label}</th>`;
             }).join('');
         }
 
         function renderChannelCells(v) {
-            const visibleCols = getVisibleChannels();
-            return visibleCols.map(col => {
-                const ch = CHANNELS[col];
+            return getVisibleChannelList().map(ch => {
                 const price = v[ch.priceKey];
                 const rate = v[ch.rateKey];
-                const tdClass = '';
-                const priceClass = 'text-slate-800';
-                const rateClass = 'text-slate-400';
-                return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap ${tdClass}">
-                            <div class="font-bold ${priceClass}">${price}</div>
-                            <div class="text-[10px] ${rateClass}">${rate}</div>
+                return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch">
+                            <div class="font-bold text-slate-800">${price}</div>
+                            <div class="text-[10px] text-slate-400">${rate}</div>
                         </td>`;
             }).join('');
         }
@@ -286,10 +284,10 @@
                 variants.forEach(v => {
                     variantRows += `
                         <tr class="variant-row text-xs">
-                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-sm" style="text-align:center !important;">${v.pumbun}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">${v.color || '-'}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap">${v.sabangCode || '-'}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap">
+                            <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-sm col-code" style="text-align:center !important;">${v.pumbun}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-color">${v.color || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap col-sabang">${v.sabangCode || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-status">
                                 ${(v.status || '-').split(',').map(s => {
                                     const t = s.trim();
                                     if (!t || t === '-') return '';
@@ -308,7 +306,7 @@
                                 }).join('')}
                             </td>
                             ${renderChannelCells(v)}
-                            <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap">${v.delivery}</td>
+                            <td class="py-2 px-3 text-slate-500 leading-relaxed text-[11px] whitespace-nowrap col-deliv">${v.delivery}</td>
                         </tr>`;
                 });
 
@@ -335,23 +333,15 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="text-center" style="min-width:1450px; width:1450px; table-layout:fixed;">
-                            <colgroup>
-                                <col style="width:120px;">
-                                <col style="width:80px;">
-                                <col style="width:110px;">
-                                <col style="width:140px;">
-                                ${getVisibleChannels().map(() => `<col style="width:${(1450-120-80-110-140-100) / getVisibleChannels().length}px;">`).join('')}
-                                <col style="width:100px;">
-                            </colgroup>
+                        <table class="price-table" style="min-width:${120+80+110+140+(getVisibleChannelList().length*90)+100}px;">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
-                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상품코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">사방넷 품번코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">판매상태</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500 col-code" style="vertical-align:bottom;">상품코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-color" style="vertical-align:bottom;">색상</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-sabang" style="vertical-align:bottom;">사방넷 품번코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-status" style="vertical-align:bottom;">판매상태</th>
                                     ${renderChannelHeaders()}
-                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">배송구분</th>
+                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500 col-deliv" style="vertical-align:bottom;">배송구분</th>
                                 </tr>
                             </thead>
                             <tbody>${variantRows}</tbody>
@@ -368,15 +358,15 @@
             if (!bar) return;
             bar.querySelectorAll('.chip').forEach(chip => {
                 chip.addEventListener('click', () => {
-                    const col = parseInt(chip.dataset.channel);
-                    if (activeChannels.has(col)) {
-                        activeChannels.delete(col);
+                    const key = chip.dataset.channel;
+                    if (activeChannels.has(key)) {
+                        activeChannels.delete(key);
                         chip.classList.remove('active');
                     } else {
-                        activeChannels.add(col);
+                        activeChannels.add(key);
                         chip.classList.add('active');
                     }
-                    // 현재 검색 결과 다시 렌더링 (채널만 갱신)
+                    // 채널 선택이 바뀌면 현재 검색 결과를 다시 그려서 컬럼을 앞으로 당김
                     if (lastKeyword && lastKeyword.trim() !== "") {
                         performSearch(lastKeyword);
                     }
