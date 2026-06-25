@@ -15,7 +15,7 @@
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:hover td { background-color: #f0fdf4; }
         .jasa-base { background: rgba(236,253,245,0.4); }
-        .ch-th { width: 90px; min-width: 90px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; }
+        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; }
 
         /* 채널 필터 칩 */
         .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
@@ -202,7 +202,7 @@
             return visibleCols.map(col => {
                 const ch = CHANNELS[col];
                 const label = ch.label || ch.name;
-                const bg = col === 4 ? 'background:rgba(236,253,245,0.4); color:#065f46;' : '';
+                const bg = '';
                 return `<th class="ch-th" style="${bg}">${label}</th>`;
             }).join('');
         }
@@ -213,9 +213,9 @@
                 const ch = CHANNELS[col];
                 const price = v[ch.priceKey];
                 const rate = v[ch.rateKey];
-                const tdClass = col === 4 ? 'jasa-base' : '';
-                const priceClass = col === 4 ? 'text-emerald-700' : 'text-slate-800';
-                const rateClass = col === 4 ? 'text-emerald-500' : 'text-slate-400';
+                const tdClass = '';
+                const priceClass = 'text-slate-800';
+                const rateClass = 'text-slate-400';
                 return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap ${tdClass}">
                             <div class="font-bold ${priceClass}">${price}</div>
                             <div class="text-[10px] ${rateClass}">${rate}</div>
@@ -335,12 +335,14 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="text-center" style="min-width:900px; width:max-content;">
+                        <table class="text-center" style="min-width:1450px; width:1450px; table-layout:fixed;">
                             <colgroup>
                                 <col style="width:120px;">
                                 <col style="width:80px;">
                                 <col style="width:110px;">
                                 <col style="width:140px;">
+                                ${getVisibleChannels().map(() => `<col style="width:${(1450-120-80-110-140-100) / getVisibleChannels().length}px;">`).join('')}
+                                <col style="width:100px;">
                             </colgroup>
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
