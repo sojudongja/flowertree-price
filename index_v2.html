@@ -204,14 +204,23 @@
         }
 
         function renderChannelHeaders() {
-            return getVisibleChannelList().map(ch => {
+            const visible = getVisibleChannelList();
+            const emptyCount = CHANNELS.length - visible.length;
+            let html = visible.map(ch => {
                 const label = ch.label || ch.name;
                 return `<th class="ch-th col-ch">${label}</th>`;
             }).join('');
+            // 선택 안 한 만큼 빈 칸으로 채움 (배송구분 앞까지 위치 고정)
+            for (let i = 0; i < emptyCount; i++) {
+                html += `<th class="ch-th col-ch" style="border-right:1px solid #f1f5f9;"></th>`;
+            }
+            return html;
         }
 
         function renderChannelCells(v) {
-            return getVisibleChannelList().map(ch => {
+            const visible = getVisibleChannelList();
+            const emptyCount = CHANNELS.length - visible.length;
+            let html = visible.map(ch => {
                 const price = v[ch.priceKey];
                 const rate = v[ch.rateKey];
                 return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch">
@@ -219,6 +228,10 @@
                             <div class="text-[10px] text-slate-400">${rate}</div>
                         </td>`;
             }).join('');
+            for (let i = 0; i < emptyCount; i++) {
+                html += `<td class="py-2 px-3 border-r border-slate-100 col-ch"></td>`;
+            }
+            return html;
         }
 
         function performSearch(keyword) {
@@ -333,7 +346,7 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="price-table" style="min-width:${110+70+100+90+(getVisibleChannelList().length*80)+90}px;">
+                        <table class="price-table" style="min-width:${110+70+100+90+(CHANNELS.length*80)+90}px; width:100%; max-width:${110+70+100+90+(CHANNELS.length*80)+90}px;">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
                                     <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500 col-code" style="vertical-align:bottom;">상품코드</th>
