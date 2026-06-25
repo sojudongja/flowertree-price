@@ -15,17 +15,17 @@
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:hover td { background-color: #f0fdf4; }
         .jasa-base { background: rgba(236,253,245,0.4); }
-        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; }
+        .ch-th { width: 90px; min-width: 90px; vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; }
 
         /* 채널 필터 칩 */
-        .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
-        .filter-label { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 8px; display: block; }
-        .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 12px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; }
+        .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+        .filter-label { font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 6px; display: block; }
+        .chip-group { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; }
+        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: #cbd5e1; }
         .chip.active { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; font-weight: 600; }
         .chip input { display: none; }
-        .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+        .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
         .chip.active .dot { background: #10b981; }
     </style>
 </head>
@@ -335,7 +335,13 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto no-scrollbar">
-                        <table class="w-full text-center" style="min-width:600px;">
+                        <table class="text-center" style="min-width:900px; width:max-content;">
+                            <colgroup>
+                                <col style="width:120px;">
+                                <col style="width:80px;">
+                                <col style="width:110px;">
+                                <col style="width:140px;">
+                            </colgroup>
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
                                     <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500" style="vertical-align:bottom;">상품코드</th>
