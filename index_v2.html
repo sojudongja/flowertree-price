@@ -14,7 +14,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .variant-row:nth-child(even) { background-color: #f8fafc; }
         .variant-row:hover td { background-color: #f0fdf4; }
-        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; overflow: hidden; }
+        .ch-th { vertical-align: bottom; padding: 4px 6px 8px 6px; text-align: center; border-right: 1px solid #f1f5f9; white-space: nowrap; font-size: 11px; font-weight: 600; color: #64748b; line-height: 1.6; overflow: hidden; height: 78px; box-sizing: border-box; }
 
         /* 채널 필터 칩 */
         .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
@@ -104,6 +104,12 @@
             </div>
         </div>
     </main>
+
+    <!-- 이미지 라이트박스 -->
+    <div id="imageLightbox" onclick="closeImageLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out;">
+        <img id="lightboxImg" src="" alt="원본 이미지" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+        <button onclick="closeImageLightbox()" style="position:absolute; top:20px; right:24px; color:white; font-size:32px; background:none; border:none; cursor:pointer; line-height:1;">&times;</button>
+    </div>
 
     <script>
         let masterData = [];
@@ -327,7 +333,8 @@
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
                         <img src="${rep.img}" alt="상품이미지" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
-                             class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0">
+                             onclick="openImageLightbox('${rep.img}')"
+                             class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0 cursor-pointer hover:opacity-80 transition-all">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap mb-1">
                                 <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">${rep.regSheet}</span>
@@ -349,12 +356,12 @@
                         <table class="price-table" style="min-width:${155+70+100+90+(CHANNELS.length*80)+90}px; width:100%; max-width:${155+70+100+90+(CHANNELS.length*80)+90}px;">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
-                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500 col-code" style="vertical-align:bottom;">상품코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-color" style="vertical-align:bottom;">색상</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-sabang" style="vertical-align:bottom;">사방넷 품번코드</th>
-                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-status" style="vertical-align:bottom;">판매상태</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 text-left whitespace-nowrap text-[11px] font-medium text-slate-500 col-code" style="vertical-align:bottom; height:78px; box-sizing:border-box;">상품코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-color" style="vertical-align:bottom; height:78px; box-sizing:border-box;">색상</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-sabang" style="vertical-align:bottom; height:78px; box-sizing:border-box;">사방넷 품번코드</th>
+                                    <th class="py-2 px-3 border-r border-slate-100 whitespace-nowrap text-[11px] font-medium text-slate-500 col-status" style="vertical-align:bottom; height:78px; box-sizing:border-box;">판매상태</th>
                                     ${renderChannelHeaders()}
-                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500 col-deliv" style="vertical-align:bottom;">배송구분</th>
+                                    <th class="py-2 px-3 whitespace-nowrap text-[11px] font-medium text-slate-500 col-deliv" style="vertical-align:bottom; height:78px; box-sizing:border-box;">배송구분</th>
                                 </tr>
                             </thead>
                             <tbody>${variantRows}</tbody>
@@ -387,6 +394,17 @@
             });
         }
 
+        function openImageLightbox(src) {
+            const box = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImg');
+            img.src = src;
+            box.style.display = 'flex';
+        }
+
+        function closeImageLightbox() {
+            document.getElementById('imageLightbox').style.display = 'none';
+        }
+
         function doSearch() {
             const inputEl = document.getElementById('searchInput');
             if (inputEl) performSearch(inputEl.value);
@@ -402,6 +420,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', loadData);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeImageLightbox();
+        });
     </script>
 </body>
 </html>
