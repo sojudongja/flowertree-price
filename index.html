@@ -21,14 +21,14 @@
         .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
         .filter-label { font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 6px; display: block; }
         .chip-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: background-color 0.1s, border-color 0.1s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: #cbd5e1; }
         .chip.active { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; font-weight: 600; }
         .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
         .chip.active .dot { background: #10b981; }
 
         /* 고정 테이블 레이아웃: 컬럼 너비를 전부 명시적으로 고정 */
-        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; }
+        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; --tbl-w: 645px; min-width: var(--tbl-w); width: 100%; max-width: var(--tbl-w); }
         .col-code   { width: 155px; }
         .col-color  { width: 70px; }
         .col-sabang { width: 100px; }
@@ -49,7 +49,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-slate-900 tracking-tight"> 플라워트리 가격 검색기</h1>
-                        <p class="text-xs text-slate-500 mt-0.5">독립 서버 구동형 (실시간 초고속 모드 v1.1)</p>
+                        <p class="text-xs text-slate-500 mt-0.5">독립 서버 구동형 (실시간 초고속 모드 v1.2)</p>
                     </div>
                 </div>
                 <div class="relative flex-1 max-w-xl md:ml-auto">
@@ -103,7 +103,7 @@
             <div class="chip-group" id="categoryFilterChips"></div>
         </div>
 
-        <div id="resultsContainer" class="grid grid-cols-1 gap-6">
+        <div id="resultsContainer" class="grid grid-cols-1 gap-6" style="min-width:0;">
             <div id="statusMessage" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                 <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-folder-open"></i></div>
                 <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중입니다...</h3>
@@ -409,9 +409,9 @@
                 });
 
                 htmlString += `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md" style="min-width:0; transition: box-shadow 0.15s;">
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
-                        <img src="${rep.img}" alt="상품이미지" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
+                        <img src="${rep.img}" alt="상품이미지" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
                              onclick="openImageLightbox('${rep.img}')"
                              class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0 cursor-pointer hover:opacity-80 transition-all">
                         <div class="flex-1 min-w-0">
@@ -431,8 +431,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto no-scrollbar">
-                        <table class="price-table" style="min-width:${155+70+100+90+(CHANNELS.length*80)+90}px; width:100%; max-width:${155+70+100+90+(CHANNELS.length*80)+90}px;">
+                    <div class="overflow-x-auto no-scrollbar" style="width:100%; max-width:100%;">
+                        <table class="price-table">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
                                     <th class="border-r border-slate-100 col-code" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="justify-content:flex-start; padding-left:12px; color:#64748b;">상품코드</div></th>
@@ -548,6 +548,9 @@
                 });
             }
         }
+
+        // 테이블 너비는 한 번만 계산해서 CSS 변수로 주입 (카드마다 재계산 안 함)
+        document.documentElement.style.setProperty('--tbl-w', (155+70+100+90+(9*80)+90) + 'px');
 
         window.addEventListener('DOMContentLoaded', loadData);
         window.addEventListener('keydown', (e) => {
