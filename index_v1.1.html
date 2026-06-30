@@ -327,7 +327,7 @@
                     variantRows += `
                         <tr class="variant-row text-xs">
                             <td class="py-2 px-3 border-r border-slate-100 font-mono text-slate-600 whitespace-nowrap text-sm col-code" style="text-align:center !important;">${v.pumbun}</td>
-                            <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-color">${v.color || '-'}</td>
+                            <td class="py-2 px-3 border-r border-slate-100 col-color" style="white-space:pre-line; word-break:break-all;">${v.color || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 text-slate-400 whitespace-nowrap col-sabang">${v.sabangCode || '-'}</td>
                             <td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-status">
                                 ${(v.status || '-').split(',').map(s => {
@@ -344,7 +344,7 @@
                                     else if (t.includes('판매중')) cls = 'background:#dbeafe; color:#1e40af;';
                                     else if (t.includes('단종')) cls = 'background:#e2e8f0; color:#475569;';
                                     else cls = 'background:#f1f5f9; color:#94a3b8;';
-                                    return `<span style="display:inline-block; margin:1px 2px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
+                                    return `<span style="display:block; margin:2px 0; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:500; ${cls}">${t}</span>`;
                                 }).join('')}
                             </td>
                             ${renderChannelCells(v)}
