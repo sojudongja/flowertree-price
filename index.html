@@ -97,6 +97,12 @@
             </div>
         </div>
 
+        <!-- 카테고리 필터 (검색 결과 기반 동적 노출) -->
+        <div id="categoryFilterBar" class="filter-bar" style="display:none;">
+            <span class="filter-label">카테고리 필터 (검색 결과 내 카테고리 · 클릭 시 해당 카테고리만 표시 · 다시 클릭하면 해제)</span>
+            <div class="chip-group" id="categoryFilterChips"></div>
+        </div>
+
         <div id="resultsContainer" class="grid grid-cols-1 gap-6">
             <div id="statusMessage" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                 <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-folder-open"></i></div>
@@ -129,6 +135,7 @@
     <script>
         let masterData = [];
         let lastKeyword = "";
+        let activeCategory = null; // null이면 전체, 값 있으면 해당 카테고리만
         const activeChannels = new Set(); // 비어있으면 전체 표시
 
         // 채널 정의: key(=class suffix) → {name, priceKey, rateKey, label}
@@ -272,6 +279,7 @@
             if (!keyword || keyword.trim() === "") {
                 matchCountEl.textContent = "0";
                 groupCountEl.textContent = "0";
+                document.getElementById('categoryFilterBar').style.display = 'none';
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
@@ -282,12 +290,20 @@
             }
 
             const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
-            const filtered = masterData.filter(item => {
+            const baseFiltered = masterData.filter(item => {
                 var a = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
                 var b = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
                 var c = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
                 return a.includes(cleanKeyword) || b.includes(cleanKeyword) || c.includes(cleanKeyword);
             });
+
+            // 검색 결과 기준으로 카테고리 칩 갱신 (카테고리 선택 상태는 유지)
+            renderCategoryChips(baseFiltered);
+
+            // 선택된 카테고리가 있으면 한 번 더 필터링
+            const filtered = activeCategory
+                ? baseFiltered.filter(item => item.regSheet === activeCategory)
+                : baseFiltered;
 
             const grouped = groupByMainCode(filtered);
             matchCountEl.textContent = filtered.length.toLocaleString();
@@ -304,6 +320,46 @@
             }
 
             renderResults(grouped);
+        }
+
+        function renderCategoryChips(baseFiltered) {
+            const bar = document.getElementById('categoryFilterBar');
+            const chipsContainer = document.getElementById('categoryFilterChips');
+
+            // 검색 결과 내 카테고리 종류 + 건수 집계
+            const catCount = new Map();
+            baseFiltered.forEach(item => {
+                const cat = item.regSheet || '미분류';
+                catCount.set(cat, (catCount.get(cat) || 0) + 1);
+            });
+
+            // 선택된 카테고리가 더 이상 결과에 없으면 해제
+            if (activeCategory && !catCount.has(activeCategory)) {
+                activeCategory = null;
+            }
+
+            if (catCount.size <= 1) {
+                bar.style.display = 'none';
+                chipsContainer.innerHTML = '';
+                return;
+            }
+
+            bar.style.display = 'block';
+            const sortedCats = [...catCount.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+            chipsContainer.innerHTML = sortedCats.map(([cat, count]) => {
+                const isActive = activeCategory === cat;
+                return `<label class="chip ${isActive ? 'active' : ''}" data-category="${cat}" onclick="toggleCategoryFilter('${cat.replace(/'/g, "\\'")}')">
+                            <span class="dot"></span>${cat} (${count})
+                        </label>`;
+            }).join('');
+        }
+
+        function toggleCategoryFilter(cat) {
+            activeCategory = (activeCategory === cat) ? null : cat;
+            if (lastKeyword && lastKeyword.trim() !== "") {
+                performSearch(lastKeyword);
+            }
         }
 
         function renderResults(grouped) {
