@@ -605,6 +605,15 @@
         // 텍스트로 강제 고정해야 하는 컬럼 인덱스 (자동 숫자/날짜 변환 방지)
         const EXCEL_TEXT_COLUMNS = [0, 2, 4]; // 대표코드, 상품코드, 사방넷품번코드
 
+        // "13,000원" 같은 문자열을 순수 숫자로 변환 (값이 없으면 '-' 유지)
+        function priceToRawNumber(priceStr) {
+            if (priceStr === undefined || priceStr === null || priceStr === '-' || priceStr === '') return '-';
+            const cleaned = String(priceStr).replace(/[^0-9.]/g, '');
+            if (cleaned === '') return '-';
+            const num = Number(cleaned);
+            return isNaN(num) ? '-' : num;
+        }
+
         function buildExcelSheetData(sourceArray) {
             const grouped = groupByMainCode(sourceArray);
             const rows = [EXCEL_HEADER];
@@ -621,15 +630,15 @@
                         v.color || '-',
                         v.sabangCode || '-',
                         v.status || '-',
-                        v.jasa, v.jasaRate,
-                        v.coupang, v.coupangRate,
-                        v.naver, v.naverRate,
-                        v.ohouse, v.ohouseRate,
-                        v.gmarket, v.gmarketRate,
-                        v.ssg, v.ssgRate,
-                        v.lotte, v.lotteRate,
-                        v.artbox, v.artboxRate,
-                        v.godpeople, v.godpeopleRate,
+                        priceToRawNumber(v.jasa), v.jasaRate,
+                        priceToRawNumber(v.coupang), v.coupangRate,
+                        priceToRawNumber(v.naver), v.naverRate,
+                        priceToRawNumber(v.ohouse), v.ohouseRate,
+                        priceToRawNumber(v.gmarket), v.gmarketRate,
+                        priceToRawNumber(v.ssg), v.ssgRate,
+                        priceToRawNumber(v.lotte), v.lotteRate,
+                        priceToRawNumber(v.artbox), v.artboxRate,
+                        priceToRawNumber(v.godpeople), v.godpeopleRate,
                         (v.delivery || '-').replace(/<br>/g, ' ')
                     ]);
                     rowIdx++;
