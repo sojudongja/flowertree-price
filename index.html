@@ -7,6 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
@@ -21,14 +22,22 @@
         .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
         .filter-label { font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 6px; display: block; }
         .chip-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: background-color 0.1s, border-color 0.1s; white-space: nowrap; flex-shrink: 0; }
+        .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; color: #475569; cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: #cbd5e1; }
         .chip.active { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; font-weight: 600; }
         .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
         .chip.active .dot { background: #10b981; }
 
+        /* 다운로드 버튼 */
+        .dl-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; white-space: nowrap; }
+        .dl-btn-all { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        .dl-btn-all:hover { background: #e2e8f0; }
+        .dl-btn-search { background: #10b981; color: white; }
+        .dl-btn-search:hover { background: #059669; }
+        .dl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
         /* 고정 테이블 레이아웃: 컬럼 너비를 전부 명시적으로 고정 */
-        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; --tbl-w: 645px; min-width: var(--tbl-w); width: 100%; max-width: var(--tbl-w); }
+        .price-table { table-layout: fixed; border-collapse: collapse; text-align: center; }
         .col-code   { width: 155px; }
         .col-color  { width: 70px; }
         .col-sabang { width: 100px; }
@@ -58,7 +67,7 @@
                     </div>
                     <input type="text" id="searchInput"
                            class="block w-full pl-10 pr-20 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
-                           placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (예: ABSG16001, 진달래, 105164)" autofocus>
+                           placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (쉼표로 여러 개 동시 검색 가능: ABSG16001, 진달래, 105164)" autofocus>
                     <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
                         <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
                         <button onclick="doSearch()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-all">검색</button>
@@ -70,9 +79,17 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div class="flex items-center gap-4">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건 (<strong id="groupCount" class="text-emerald-600 font-bold">0</strong>개 상품)</span>
+            <div class="flex items-center gap-4 flex-wrap">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-400"></i> 총 상품수: <strong id="totalCount" class="text-slate-900 font-semibold">0</strong>개
+                    <button id="downloadAllBtn" class="dl-btn dl-btn-all" onclick="downloadAllExcel()" title="전체 데이터를 엑셀로 다운로드">
+                        <i class="fa-solid fa-file-excel"></i> 전체 다운로드
+                    </button>
+                </span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-filter text-emerald-500"></i> 검색결과: <strong id="matchCount" class="text-emerald-600 font-bold">0</strong>건 (<strong id="groupCount" class="text-emerald-600 font-bold">0</strong>개 상품)
+                    <button id="downloadFilteredBtn" class="dl-btn dl-btn-search" onclick="downloadFilteredExcel()" disabled title="현재 검색 결과를 엑셀로 다운로드">
+                        <i class="fa-solid fa-file-excel"></i> 검색결과 다운로드
+                    </button>
+                </span>
             </div>
             <div class="flex items-center gap-2 text-xs">
                 <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500 border border-slate-200">
@@ -103,7 +120,7 @@
             <div class="chip-group" id="categoryFilterChips"></div>
         </div>
 
-        <div id="resultsContainer" class="grid grid-cols-1 gap-6" style="min-width:0;">
+        <div id="resultsContainer" class="grid grid-cols-1 gap-6">
             <div id="statusMessage" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                 <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-folder-open"></i></div>
                 <h3 class="text-lg font-medium text-slate-900">데이터를 로드하는 중입니다...</h3>
@@ -135,6 +152,7 @@
     <script>
         let masterData = [];
         let lastKeyword = "";
+        let lastFilteredData = []; // 검색결과 다운로드용 (그룹핑 전, 옵션 단위 flat 배열)
         let activeCategory = null; // null이면 전체, 값 있으면 해당 카테고리만
         const activeChannels = new Set(); // 비어있으면 전체 표시
 
@@ -171,7 +189,7 @@
                 statusMessage.innerHTML = `
                     <div class="text-emerald-500 text-6xl mb-4"><i class="fa-solid fa-circle-check"></i></div>
                     <h3 class="text-lg font-medium text-slate-900">데이터 로드 완료 (${masterData.length.toLocaleString()}개)</h3>
-                    <p class="text-slate-500 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드로 검색하세요.</p>
+                    <p class="text-slate-500 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드로 검색하세요. (쉼표로 여러 개 동시 검색 가능)</p>
                 `;
             } catch (error) {
                 console.error(error);
@@ -275,26 +293,33 @@
             const container = document.getElementById('resultsContainer');
             const matchCountEl = document.getElementById('matchCount');
             const groupCountEl = document.getElementById('groupCount');
+            const downloadFilteredBtn = document.getElementById('downloadFilteredBtn');
 
             if (!keyword || keyword.trim() === "") {
                 matchCountEl.textContent = "0";
                 groupCountEl.textContent = "0";
+                lastFilteredData = [];
+                downloadFilteredBtn.disabled = true;
                 document.getElementById('categoryFilterBar').style.display = 'none';
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">검색어를 입력해 주세요.</h3>
-                        <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드 모두 검색 가능합니다.</p>
+                        <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드 모두 검색 가능합니다. (쉼표로 여러 개 동시 검색 가능)</p>
                     </div>`;
                 return;
             }
 
-            const cleanKeyword = keyword.toLowerCase().replace(/\s+/g, "");
+            // 쉼표(,) 구분 다중 키워드 검색 (OR 조건)
+            const keywords = keyword.split(',')
+                .map(k => k.trim().toLowerCase().replace(/\s+/g, ""))
+                .filter(k => k.length > 0);
+
             const baseFiltered = masterData.filter(item => {
                 var a = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
                 var b = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
                 var c = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
-                return a.includes(cleanKeyword) || b.includes(cleanKeyword) || c.includes(cleanKeyword);
+                return keywords.some(kw => a.includes(kw) || b.includes(kw) || c.includes(kw));
             });
 
             // 검색 결과 기준으로 카테고리 칩 갱신 (카테고리 선택 상태는 유지)
@@ -308,6 +333,10 @@
             const grouped = groupByMainCode(filtered);
             matchCountEl.textContent = filtered.length.toLocaleString();
             groupCountEl.textContent = grouped.size.toLocaleString();
+
+            // 검색결과 다운로드용 데이터 저장
+            lastFilteredData = filtered;
+            downloadFilteredBtn.disabled = filtered.length === 0;
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -409,9 +438,9 @@
                 });
 
                 htmlString += `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md" style="min-width:0; transition: box-shadow 0.15s;">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
                     <div class="p-4 flex items-center gap-4 border-b border-slate-100 bg-slate-50/50">
-                        <img src="${rep.img}" alt="상품이미지" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
+                        <img src="${rep.img}" alt="상품이미지" onerror="this.src='https://placehold.co/64x64?text=No+Img'"
                              onclick="openImageLightbox('${rep.img}')"
                              class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white shadow-sm flex-shrink-0 cursor-pointer hover:opacity-80 transition-all">
                         <div class="flex-1 min-w-0">
@@ -431,8 +460,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto no-scrollbar" style="width:100%; max-width:100%;">
-                        <table class="price-table">
+                    <div class="overflow-x-auto no-scrollbar">
+                        <table class="price-table" style="min-width:${155+70+100+90+(CHANNELS.length*80)+90}px; width:100%; max-width:${155+70+100+90+(CHANNELS.length*80)+90}px;">
                             <thead>
                                 <tr class="bg-slate-100/70 border-b border-slate-200">
                                     <th class="border-r border-slate-100 col-code" style="height:78px; box-sizing:border-box; padding:0;"><div class="ch-th-inner" style="justify-content:flex-start; padding-left:12px; color:#64748b;">상품코드</div></th>
@@ -549,8 +578,115 @@
             }
         }
 
-        // 테이블 너비는 한 번만 계산해서 CSS 변수로 주입 (카드마다 재계산 안 함)
-        document.documentElement.style.setProperty('--tbl-w', (155+70+100+90+(9*80)+90) + 'px');
+        // ===================== 엑셀 다운로드 =====================
+
+        const EXCEL_HEADER = [
+            '대표코드', '상품명', '상품코드', '색상', '사방넷 품번코드', '판매상태',
+            '자사몰', '자사몰배율',
+            '쿠팡', '쿠팡배율',
+            '네이버', '네이버배율',
+            '오늘의집', '오늘의집배율',
+            '지마켓/옥션/11번가/롯데온', '지마켓배율',
+            '신세계몰/GS SHOP/현대홈쇼핑', '신세계배율',
+            'CJ온스타일/갓피플몰/홈앤쇼핑/롯데홈쇼핑', 'CJ배율',
+            '핫트랙스/텐바이텐/아트박스', '아트박스배율',
+            '카카오', '카카오배율',
+            '배송구분'
+        ];
+
+        // 텍스트로 강제 고정해야 하는 컬럼 인덱스 (자동 숫자/날짜 변환 방지)
+        const EXCEL_TEXT_COLUMNS = [0, 2, 4]; // 대표코드, 상품코드, 사방넷품번코드
+
+        function buildExcelSheetData(sourceArray) {
+            const grouped = groupByMainCode(sourceArray);
+            const rows = [EXCEL_HEADER];
+            const merges = [];
+            let rowIdx = 1; // 0번 행은 헤더
+
+            grouped.forEach((variants, mainCode) => {
+                const startRow = rowIdx;
+                variants.forEach(v => {
+                    rows.push([
+                        mainCode,
+                        v.prodName || '-',
+                        v.pumbun,
+                        v.color || '-',
+                        v.sabangCode || '-',
+                        v.status || '-',
+                        v.jasa, v.jasaRate,
+                        v.coupang, v.coupangRate,
+                        v.naver, v.naverRate,
+                        v.ohouse, v.ohouseRate,
+                        v.gmarket, v.gmarketRate,
+                        v.ssg, v.ssgRate,
+                        v.lotte, v.lotteRate,
+                        v.artbox, v.artboxRate,
+                        v.godpeople, v.godpeopleRate,
+                        (v.delivery || '-').replace(/<br>/g, ' ')
+                    ]);
+                    rowIdx++;
+                });
+                const endRow = rowIdx - 1;
+                if (endRow > startRow) {
+                    merges.push({ s: { r: startRow, c: 0 }, e: { r: endRow, c: 0 } }); // 대표코드 병합
+                    merges.push({ s: { r: startRow, c: 1 }, e: { r: endRow, c: 1 } }); // 상품명 병합
+                }
+            });
+
+            return { rows, merges };
+        }
+
+        function exportExcelFile(sourceArray, filenamePrefix) {
+            if (!sourceArray || sourceArray.length === 0) {
+                alert('다운로드할 데이터가 없습니다.');
+                return;
+            }
+            if (typeof XLSX === 'undefined') {
+                alert('엑셀 라이브러리 로드에 실패했습니다. 네트워크 연결을 확인해 주세요.');
+                return;
+            }
+
+            const { rows, merges } = buildExcelSheetData(sourceArray);
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            ws['!merges'] = merges;
+
+            // 코드/품번 컬럼은 텍스트로 강제 고정 (숫자·날짜 자동변환 방지)
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = 1; R <= range.e.r; R++) {
+                EXCEL_TEXT_COLUMNS.forEach(C => {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[addr]) { ws[addr].t = 's'; ws[addr].z = '@'; }
+                });
+            }
+
+            // 컬럼 너비 지정
+            ws['!cols'] = EXCEL_HEADER.map((h, i) => {
+                if (i === 1) return { wch: 30 }; // 상품명
+                if (i === 4) return { wch: 14 }; // 사방넷품번
+                return { wch: 12 };
+            });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '가격데이터');
+
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${y}${m}${d}`;
+
+            XLSX.writeFile(wb, `${filenamePrefix}_${dateStr}.xlsx`);
+        }
+
+        function downloadAllExcel() {
+            exportExcelFile(masterData, '플라워트리_전체가격');
+        }
+
+        function downloadFilteredExcel() {
+            exportExcelFile(lastFilteredData, '플라워트리_검색결과');
+        }
+
+        // ===========================================================
 
         window.addEventListener('DOMContentLoaded', loadData);
         window.addEventListener('keydown', (e) => {
