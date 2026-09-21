@@ -67,7 +67,7 @@
                     </div>
                     <input type="text" id="searchInput"
                            class="block w-full pl-10 pr-20 py-3 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all shadow-inner"
-                           placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (쉼표로 여러 개 동시 검색 가능: ABSG16001, 진달래, 105164)" autofocus>
+                           placeholder="상품코드, 상품명, 사방넷 품번코드로 검색 (쉼표: 여러 개 동시검색 / 띄어쓰기: 모두 포함된 상품만 검색)" autofocus>
                     <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
                         <span id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></span>
                         <button onclick="doSearch()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-all">검색</button>
@@ -189,7 +189,7 @@
                 statusMessage.innerHTML = `
                     <div class="text-emerald-500 text-6xl mb-4"><i class="fa-solid fa-circle-check"></i></div>
                     <h3 class="text-lg font-medium text-slate-900">데이터 로드 완료 (${masterData.length.toLocaleString()}개)</h3>
-                    <p class="text-slate-500 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드로 검색하세요. (쉼표로 여러 개 동시 검색 가능)</p>
+                    <p class="text-slate-500 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드로 검색하세요. (쉼표: 여러 개 동시검색 / 띄어쓰기: 모두 포함된 상품만 검색)</p>
                 `;
             } catch (error) {
                 console.error(error);
@@ -305,21 +305,29 @@
                     <div class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <div class="text-slate-300 text-6xl mb-4"><i class="fa-solid fa-keyboard"></i></div>
                         <h3 class="text-lg font-medium text-slate-900">검색어를 입력해 주세요.</h3>
-                        <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드 모두 검색 가능합니다. (쉼표로 여러 개 동시 검색 가능)</p>
+                        <p class="text-slate-400 text-sm mt-1">상품코드, 상품명, 사방넷 품번코드 모두 검색 가능합니다. (쉼표: 여러 개 동시검색 / 띄어쓰기: 모두 포함된 상품만 검색)</p>
                     </div>`;
                 return;
             }
 
-            // 쉼표(,) 구분 다중 키워드 검색 (OR 조건)
-            const keywords = keyword.split(',')
-                .map(k => k.trim().toLowerCase().replace(/\s+/g, ""))
-                .filter(k => k.length > 0);
+            // 쉼표(,)로 구분된 각 그룹은 OR, 그룹 안의 띄어쓰기 단어들은 AND로 검색
+            // 예: "트리 화이트, 진달래" → (트리 AND 화이트) OR (진달래)
+            const orGroups = keyword.split(',')
+                .map(seg => seg.trim())
+                .filter(seg => seg.length > 0);
+            const parsedGroups = orGroups.map(seg =>
+                seg.split(/\s+/)
+                   .map(w => w.toLowerCase().replace(/\s+/g, ""))
+                   .filter(w => w.length > 0)
+            ).filter(words => words.length > 0);
 
             const baseFiltered = masterData.filter(item => {
                 var a = item.pumbunLow     ? String(item.pumbunLow).replace(/\s+/g, "")     : "";
                 var b = item.prodNameLow   ? String(item.prodNameLow).replace(/\s+/g, "")   : "";
                 var c = item.sabangCodeLow ? String(item.sabangCodeLow).replace(/\s+/g, "") : "";
-                return keywords.some(kw => a.includes(kw) || b.includes(kw) || c.includes(kw));
+                return parsedGroups.some(words =>
+                    words.every(w => a.includes(w) || b.includes(w) || c.includes(w))
+                );
             });
 
             // 검색 결과 기준으로 카테고리 칩 갱신 (카테고리 선택 상태는 유지)
