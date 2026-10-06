@@ -181,6 +181,8 @@
                 if (!response.ok) throw new Error('Data load failed');
 
                 masterData = await response.json();
+                // v1.2 수정: 각 상품에 고유 인덱스 부여 (쿠팡 팝업 등 클릭 이벤트에서 상품명 대신 인덱스만 전달)
+                masterData.forEach((item, i) => { item._idx = i; });
                 totalCountEl.textContent = masterData.length.toLocaleString();
 
                 connectionStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>정상 연결됨`;
@@ -270,9 +272,8 @@
                 const price = v[ch.priceKey];
                 const rate = v[ch.rateKey];
                 if (ch.key === 'coupang') {
-                    const safePumbun = (v.pumbun || '').replace(/'/g, "\\'");
-                    const safeName = (v.prodName || '').replace(/'/g, "\\'");
-                    return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch" style="cursor:pointer;" onclick="openCoupangQtyPopup('${price}', '${safePumbun}', '${safeName}')" title="클릭하면 수량별 판매가를 볼 수 있어요">
+                    // v1.2 수정: 상품명/품번 등 문자열을 onclick에 직접 넣지 않고 숫자 인덱스만 전달 (줄바꿈·따옴표 포함 상품명 오류 방지)
+                    return `<td class="py-2 px-3 border-r border-slate-100 whitespace-nowrap col-ch" style="cursor:pointer;" onclick="openCoupangQtyPopup(${v._idx})" title="클릭하면 수량별 판매가를 볼 수 있어요">
                                 <div class="font-bold text-slate-800" style="text-decoration:underline; text-decoration-style:dotted; text-decoration-color:#cbd5e1;">${price}</div>
                                 <div class="text-[10px] text-slate-400">${rate}</div>
                             </td>`;
@@ -521,12 +522,16 @@
             return Math.round(num / 100) * 100;
         }
 
-        function openCoupangQtyPopup(priceStr, pumbun, prodName) {
-            const unitPrice = parsePriceToNumber(priceStr);
+        function openCoupangQtyPopup(idx) {
+            const item = masterData[idx];
+            if (!item) return;
+            const unitPrice = parsePriceToNumber(item.coupang);
             const sub = document.getElementById('coupangPopupSub');
             const body = document.getElementById('coupangPopupBody');
 
-            sub.textContent = `${pumbun} · ${prodName}`;
+            // 상품명 안의 줄바꿈·연속 공백은 한 칸 공백으로 정리해서 표시
+            const cleanName = String(item.prodName || '').replace(/\s+/g, ' ').trim();
+            sub.textContent = `${item.pumbun} · ${cleanName}`;
 
             if (unitPrice === null) {
                 body.innerHTML = `<div style="padding:16px 0; text-align:center; color:#94a3b8; font-size:13px;">가격 정보가 없어 계산할 수 없어요.</div>`;
